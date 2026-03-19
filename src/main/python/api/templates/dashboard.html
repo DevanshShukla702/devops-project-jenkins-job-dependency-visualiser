@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Jenkins Visualizer</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI";
+            background: #0f172a;
+            color: white;
+        }
+
+        header {
+            padding: 12px;
+            background: #020617;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            background: #2563eb;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        #network {
+            flex: 3;
+        }
+
+        #details {
+            flex: 1;
+            background: #020617;
+            padding: 16px;
+            border-left: 1px solid #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h2>Jenkins Job Dependency Visualizer</h2>
+    <button onclick="loadGraph()">Fetch Jobs</button>
+</header>
+
+<div class="container">
+    <div id="network"></div>
+    <div id="details">Click a node</div>
+</div>
+
+<script src="/static/graph.js"></script>
+
+</body>
+</html>
