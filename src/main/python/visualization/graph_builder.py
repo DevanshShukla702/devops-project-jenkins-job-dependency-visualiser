@@ -1,24 +1,56 @@
+def map_color_to_status(color):
+    if not color:
+        return "notbuilt"
+
+    color = color.lower()
+
+    if "blue" in color:
+        return "success"
+    if "red" in color:
+        return "failed"
+    if "yellow" in color:
+        return "unstable"
+
+    return "notbuilt"
+
+
+def format_duration(ms):
+    if not ms:
+        return "-"
+
+    seconds = ms // 1000
+    minutes = seconds // 60
+    seconds = seconds % 60
+
+    return f"{minutes}m {seconds}s"
+
+
 def build_graph(jobs_data):
     nodes = []
     edges = set()
 
     for job in jobs_data:
-        name = job["name"]
-        details = job["details"]
+        name = job.get("name")
 
-        status = details.get("color", "notbuilt").upper()
+        details = job.get("details", {})
 
-        last_build = details.get("lastBuild")
-        build_number = last_build.get("number") if last_build else None
+        # ✅ FIX: get color from MAIN job, not details
+        status = map_color_to_status(job.get("color"))
 
-        upstream = [u["name"] for u in details.get("upstreamProjects", [])]
-        downstream = [d["name"] for d in details.get("downstreamProjects", [])]
+        last_build = details.get("lastBuild", {})
+
+        build_number = last_build.get("number")
+        duration = format_duration(last_build.get("duration"))
+
+        upstream = [u.get("name") for u in details.get("upstreamProjects", [])]
+        downstream = [d.get("name") for d in details.get("downstreamProjects", [])]
 
         nodes.append({
             "id": name,
             "label": name,
-            "status": status,
-            "build": build_number,
+            "status": status,              # ✅ now correct
+            "build_number": build_number,
+            "duration": duration,
             "upstream": upstream,
             "downstream": downstream
         })
@@ -31,5 +63,5 @@ def build_graph(jobs_data):
 
     return {
         "nodes": nodes,
-        "edges": [{"source": s, "target": t} for s, t in edges]
+        "edges": [{"from": s, "to": t} for s, t in edges]
     }

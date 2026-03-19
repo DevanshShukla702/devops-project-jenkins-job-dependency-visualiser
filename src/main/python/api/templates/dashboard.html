@@ -1,61 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Jenkins Visualizer</title>
+    <meta charset="UTF-8">
+    <title>FlowTrace — Jenkins Visualizer</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- vis-network -->
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: "Segoe UI";
-            background: #0f172a;
-            color: white;
-        }
-
-        header {
-            padding: 12px;
-            background: #020617;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        button {
-            background: #2563eb;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .container {
-            display: flex;
-            height: calc(100vh - 60px);
-        }
-
-        #network {
-            flex: 3;
-        }
-
-        #details {
-            flex: 1;
-            background: #020617;
-            padding: 16px;
-            border-left: 1px solid #1f2937;
-        }
-    </style>
+    <!-- CSS -->
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
 <body>
 
-<header>
-    <h2>Jenkins Job Dependency Visualizer</h2>
-    <button onclick="loadGraph()">Fetch Jobs</button>
-</header>
+<div class="app">
 
-<div class="container">
-    <div id="network"></div>
-    <div id="details">Click a node</div>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="brand">
+            <div class="logo">⚙️</div>
+            <div>
+                <div class="title">FlowTrace</div>
+                <div class="subtitle">Jenkins Job Dependency Visualizer</div>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="loadGraph()">↻ Refresh</button>
+    </header>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- GRAPH -->
+        <div class="graph-container">
+            <div id="network"></div>
+
+            <!-- LEGEND -->
+            <div class="legend">
+                <div><span class="dot success"></span>Success</div>
+                <div><span class="dot warning"></span>Unstable</div>
+                <div><span class="dot danger"></span>Failed</div>
+                <div><span class="dot muted"></span>Not Built</div>
+            </div>
+        </div>
+
+        <!-- DETAILS PANEL -->
+        <div id="details-panel">
+            <h2 id="job-title">Click a node</h2>
+            <div id="job-details">No job selected</div>
+        </div>
+
+    </div>
+
 </div>
 
 <script src="/static/graph.js"></script>

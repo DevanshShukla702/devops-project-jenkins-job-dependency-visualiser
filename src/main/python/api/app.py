@@ -27,6 +27,7 @@ def graph():
 
             jobs_data.append({
                 "name": name,
+                "color": job.get("color"),   # ✅ CRITICAL FIX
                 "details": details
             })
 
