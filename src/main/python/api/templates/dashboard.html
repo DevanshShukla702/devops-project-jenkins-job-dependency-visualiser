@@ -1,63 +1,115 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>FlowTrace — Jenkins Visualizer</title>
+{% extends "base.html" %}
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+{% block title %}Dashboard — FlowTrace{% endblock %}
 
-    <!-- vis-network -->
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-
-<body>
-
-<div class="app">
-
-    <!-- HEADER -->
-    <header class="header">
-        <div class="brand">
-            <div class="logo">⚙️</div>
-            <div>
-                <div class="title">FlowTrace</div>
-                <div class="subtitle">Jenkins Job Dependency Visualizer</div>
-            </div>
+{% block content %}
+<div class="dashboard-layout gs-fade-in">
+    <!-- Overlay Loader -->
+    <div id="loader-overlay">
+        <div class="page-loader">
+            <div class="loader-spinner"></div>
+            <p>Tracing pipeline dependencies...</p>
         </div>
-
-        <button class="refresh-btn" onclick="loadGraph()">↻ Refresh</button>
-    </header>
-
-    <!-- MAIN -->
-    <div class="main">
-
-        <!-- GRAPH -->
-        <div class="graph-container">
-            <div id="network"></div>
-
-            <!-- LEGEND -->
-            <div class="legend">
-                <div><span class="dot success"></span>Success</div>
-                <div><span class="dot warning"></span>Unstable</div>
-                <div><span class="dot danger"></span>Failed</div>
-                <div><span class="dot muted"></span>Not Built</div>
-            </div>
-        </div>
-
-        <!-- DETAILS PANEL -->
-        <div id="details-panel">
-            <h2 id="job-title">Click a node</h2>
-            <div id="job-details">No job selected</div>
-        </div>
-
     </div>
 
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <input type="text" id="job-search" class="search-box" placeholder="Search jobs (press /)">
+            <div class="filter-controls" id="filter-controls">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="success">Success</button>
+                <button class="filter-btn" data-filter="failed">Failed</button>
+                <button class="filter-btn" data-filter="unstable">Unstable</button>
+                <button class="filter-btn" data-filter="notbuilt">Not Built</button>
+            </div>
+        </div>
+        <div class="jobs-list" id="jobs-list">
+            <!-- Populated via JS -->
+        </div>
+    </aside>
+
+    <!-- Main Graph Area -->
+    <main class="graph-area">
+        <div class="metrics-bar">
+            <div class="metric-card">
+                <h4>Total Jobs</h4>
+                <div class="metric-value gs-counter" id="stat-total">0</div>
+            </div>
+            <div class="metric-card">
+                <h4>Success Rate</h4>
+                <div class="metric-value gs-counter" id="stat-success-rate">0%</div>
+            </div>
+            <div class="metric-card">
+                <h4>Failed</h4>
+                <div class="metric-value gs-counter" style="color: var(--danger-color)" id="stat-failed">0</div>
+            </div>
+            <div class="metric-card">
+                <h4>Last Refreshed</h4>
+                <div class="metric-value" style="font-size:1rem; padding-top:0.4rem;" id="stat-last-refreshed">-</div>
+            </div>
+        </div>
+
+        <div id="network"></div>
+
+        <!-- Float Controls -->
+        <div class="graph-controls">
+            <button class="graph-btn" title="Refresh (R)" onclick="refreshGraph()">↻</button>
+            <button class="graph-btn" title="Fit View (F)" onclick="fitGraphView()">[ ]</button>
+            <button class="graph-btn" title="Export PNG" onclick="exportGraph()">⬇</button>
+            <button class="graph-btn" title="Toggle Auto-Refresh" id="auto-refresh-btn">⏱</button>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-panel">
+            <div class="legend-item"><div class="job-dot success"></div> Success</div>
+            <div class="legend-item"><div class="job-dot failed"></div> Failed</div>
+            <div class="legend-item"><div class="job-dot unstable"></div> Unstable</div>
+            <div class="legend-item"><div class="job-dot notbuilt"></div> Not Built</div>
+        </div>
+    </main>
+
+    <!-- Right Detail Panel -->
+    <aside class="detail-panel" id="detail-panel">
+        <div class="detail-header">
+            <div>
+                <h3 class="detail-title" id="dp-title">Job Name</h3>
+                <span class="status-pill" id="dp-status">STATUS</span>
+            </div>
+            <button class="close-panel-btn" onclick="closeDetailPanel()">×</button>
+        </div>
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">Build Number</div>
+                <div class="detail-value" id="dp-build">-</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Duration</div>
+                <div class="detail-value" id="dp-duration">-</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Upstream Jobs</div>
+                <div class="detail-value" id="dp-upstream">-</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Downstream Jobs</div>
+                <div class="detail-value" id="dp-downstream">-</div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <button class="btn btn-primary btn-block" onclick="tracePath()">Trace Path</button>
+                <button class="btn btn-outline btn-block" style="margin-top: 1rem;" onclick="openJenkins()">Open in Jenkins ↗</button>
+            </div>
+        </div>
+    </aside>
 </div>
+{% endblock %}
 
-<script src="/static/graph.js"></script>
-
-</body>
-</html>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+{% endblock %}

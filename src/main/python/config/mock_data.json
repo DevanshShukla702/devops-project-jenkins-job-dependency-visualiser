@@ -1,0 +1,119 @@
+[
+  {
+    "name": "Build-App",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 105, "duration": 45000 },
+      "upstreamProjects": [],
+      "downstreamProjects": [{"name": "Unit-Test"}, {"name": "Lint-Check"}, {"name": "Security-Scan"}]
+    }
+  },
+  {
+    "name": "Unit-Test",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 105, "duration": 120000 },
+      "upstreamProjects": [{"name": "Build-App"}],
+      "downstreamProjects": [{"name": "Integration-Test"}]
+    }
+  },
+  {
+    "name": "Lint-Check",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 105, "duration": 35000 },
+      "upstreamProjects": [{"name": "Build-App"}],
+      "downstreamProjects": [{"name": "Integration-Test"}]
+    }
+  },
+  {
+    "name": "Security-Scan",
+    "color": "yellow",
+    "details": {
+      "lastBuild": { "number": 105, "duration": 300000 },
+      "upstreamProjects": [{"name": "Build-App"}],
+      "downstreamProjects": [{"name": "Deploy-Staging"}]
+    }
+  },
+  {
+    "name": "Integration-Test",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 103, "duration": 480000 },
+      "upstreamProjects": [{"name": "Unit-Test"}, {"name": "Lint-Check"}],
+      "downstreamProjects": [{"name": "Deploy-Staging"}]
+    }
+  },
+  {
+    "name": "Deploy-Staging",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 88, "duration": 90000 },
+      "upstreamProjects": [{"name": "Security-Scan"}, {"name": "Integration-Test"}],
+      "downstreamProjects": [{"name": "Smoke-Test"}, {"name": "Performance-Test"}]
+    }
+  },
+  {
+    "name": "Smoke-Test",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 85, "duration": 45000 },
+      "upstreamProjects": [{"name": "Deploy-Staging"}],
+      "downstreamProjects": [{"name": "Deploy-Production"}]
+    }
+  },
+  {
+    "name": "Performance-Test",
+    "color": "yellow",
+    "details": {
+      "lastBuild": { "number": 82, "duration": 600000 },
+      "upstreamProjects": [{"name": "Deploy-Staging"}],
+      "downstreamProjects": [{"name": "Deploy-Production"}]
+    }
+  },
+  {
+    "name": "Deploy-Production",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 42, "duration": 150000 },
+      "upstreamProjects": [{"name": "Smoke-Test"}, {"name": "Performance-Test"}],
+      "downstreamProjects": [{"name": "Notify-Team"}, {"name": "Monitoring-Service"}]
+    }
+  },
+  {
+    "name": "Notify-Team",
+    "color": "blue",
+    "details": {
+      "lastBuild": { "number": 42, "duration": 5000 },
+      "upstreamProjects": [{"name": "Deploy-Production"}],
+      "downstreamProjects": []
+    }
+  },
+  {
+    "name": "Monitoring-Service",
+    "color": "notbuilt",
+    "details": {
+      "lastBuild": { "number": null, "duration": null },
+      "upstreamProjects": [{"name": "Deploy-Production"}, {"name": "Test-Services"}],
+      "downstreamProjects": []
+    }
+  },
+  {
+    "name": "Test-Services",
+    "color": "red",
+    "details": {
+      "lastBuild": { "number": 12, "duration": 180000 },
+      "upstreamProjects": [],
+      "downstreamProjects": [{"name": "Monitoring-Service"}]
+    }
+  },
+  {
+    "name": "Cleanup-Logs",
+    "color": "notbuilt",
+    "details": {
+      "lastBuild": { "number": null, "duration": null },
+      "upstreamProjects": [],
+      "downstreamProjects": []
+    }
+  }
+]

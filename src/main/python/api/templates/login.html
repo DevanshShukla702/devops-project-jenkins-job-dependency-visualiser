@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Login — FlowTrace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-panel-brand">
+        <h1>FlowTrace</h1>
+        <p>Visualize. Trace. Debug. Your Jenkins pipelines, reimagined.</p>
+    </div>
+    
+    <div class="auth-panel-form">
+        <div class="auth-box gs-reveal">
+            <h2>Welcome Back</h2>
+            
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="flash-msg {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+            </div>
+            
+            <form action="{{ url_for('login') }}" method="POST" id="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" autocomplete="username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span class="btn-text">Login</span>
+                </button>
+            </form>
+            
+            <form action="{{ url_for('login') }}" method="POST" id="demo-form">
+                <input type="hidden" name="demo_bypass" value="true">
+                <button type="submit" class="demo-bypass-btn">
+                    [ Demo Mode: Bypass Auth ]
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>New user? <a href="{{ url_for('register') }}">Create an account</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

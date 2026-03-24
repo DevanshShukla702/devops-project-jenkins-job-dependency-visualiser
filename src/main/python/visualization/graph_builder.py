@@ -37,13 +37,16 @@ def build_graph(jobs_data):
         # ✅ FIX: get color from MAIN job, not details
         status = map_color_to_status(job.get("color"))
 
-        last_build = details.get("lastBuild", {})
+        last_build = details.get("lastBuild") or {}
 
         build_number = last_build.get("number")
         duration = format_duration(last_build.get("duration"))
 
-        upstream = [u.get("name") for u in details.get("upstreamProjects", [])]
-        downstream = [d.get("name") for d in details.get("downstreamProjects", [])]
+        upstream_projects = details.get("upstreamProjects") or []
+        upstream = [u.get("name") for u in upstream_projects]
+
+        downstream_projects = details.get("downstreamProjects") or []
+        downstream = [d.get("name") for d in downstream_projects]
 
         nodes.append({
             "id": name,

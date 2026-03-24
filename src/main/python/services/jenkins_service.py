@@ -4,7 +4,7 @@ import yaml
 from requests.auth import HTTPBasicAuth
 
 CONFIG_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "config", "config.yaml")
+    os.path.join(os.path.dirname(__file__), "..", "config", "config.yaml")
 )
 
 with open(CONFIG_PATH) as f:

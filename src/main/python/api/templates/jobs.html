@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs — FlowTrace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jobs.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="jobs-container gs-fade-in">
+    <div class="table-wrapper">
+        <div class="jobs-header">
+            <h2>Pipeline Jobs</h2>
+            <div style="display: flex; gap: 1rem;">
+                <input type="text" id="jobs-search-input" class="form-control jobs-search" placeholder="Search jobs...">
+                <button class="btn btn-outline" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+        
+        <table class="jobs-table" id="jobs-table">
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Job Name ↕</th>
+                    <th onclick="sortTable(1)">Status ↕</th>
+                    <th onclick="sortTable(2)">Build # ↕</th>
+                    <th onclick="sortTable(3)">Duration ↕</th>
+                    <th onclick="sortTable(4)">Upstream ↕</th>
+                    <th onclick="sortTable(5)">Downstream ↕</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="jobs-tbody">
+                <!-- Data populated by JS -->
+                <tr><td colspan="7" style="text-align:center;">Loading jobs...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentData = [];
+
+    async function loadJobs() {
+        try {
+            const res = await fetch('/api/jobs');
+            currentData = await res.json();
+            renderTable(currentData);
+        } catch(e) {
+            console.error(e);
+            document.getElementById('jobs-tbody').innerHTML = '<tr><td colspan="7">Error loading data.</td></tr>';
+        }
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('jobs-tbody');
+        tbody.innerHTML = '';
+        data.forEach(job => {
+            const tr = document.createElement('tr');
+            tr.className = 'gs-fade-in';
+            
+            // Format status
+            let statusClass = `status-${job.color.replace('_anime', '').replace('anime', '').replace('blue', 'success').replace('red', 'failed').replace('yellow', 'unstable')}`;
+            if(!statusClass.includes('success') && !statusClass.includes('failed') && !statusClass.includes('unstable')) {
+                statusClass = 'status-notbuilt';
+            }
+            const statusLabel = statusClass.split('-')[1];
+
+            tr.innerHTML = `
+                <td class="mono">${job.name}</td>
+                <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
+                <td class="mono">#${job.build_number || '-'}</td>
+                <td class="mono">${formatDuration(job.duration)}</td>
+                <td class="mono">${job.upstream.length}</td>
+                <td class="mono">${job.downstream.length}</td>
+                <td>
+                    <button class="action-btn" onclick="window.location.href='/dashboard?highlight=${job.name}'">View Graph</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function formatDuration(ms) {
+        if(!ms) return '-';
+        let s = Math.floor(ms / 1000);
+        let m = Math.floor(s / 60);
+        s = s % 60;
+        return `${m}m ${s}s`;
+    }
+
+    document.getElementById('jobs-search-input').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = currentData.filter(j => j.name.toLowerCase().includes(query));
+        renderTable(filtered);
+    });
+
+    function exportCSV() {
+        const headers = ["Job Name", "Status", "Build", "Duration", "Upstream Count", "Downstream Count"];
+        let csv = headers.join(",") + "\n";
+        currentData.forEach(job => {
+            const statusStr = job.color.replace('_anime','').replace('blue','SUCCESS').replace('red','FAILED').replace('yellow','UNSTABLE');
+            csv += [
+                job.name,
+                statusStr,
+                job.build_number || '',
+                job.duration || '',
+                job.upstream.length,
+                job.downstream.length
+            ].join(",") + "\n";
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'flowtrace_jobs.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast("Exported CSV successfully", "success");
+    }
+
+    let sortAsc = true;
+    function sortTable(colIdx) {
+        sortAsc = !sortAsc;
+        const keyMap = ['name', 'color', 'build_number', 'duration', 'upstream', 'downstream'];
+        const key = keyMap[colIdx];
+        
+        currentData.sort((a, b) => {
+            let valA = a[key];
+            let valB = b[key];
+            
+            if(Array.isArray(valA)) valA = valA.length;
+            if(Array.isArray(valB)) valB = valB.length;
+            
+            if(valA == null) valA = 0;
+            if(valB == null) valB = 0;
+            
+            if(typeof valA === 'string' && typeof valB === 'string') {
+                return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+            return sortAsc ? valA - valB : valB - valA;
+        });
+        
+        renderTable(currentData);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadJobs();
+    });
+</script>
+{% endblock %}

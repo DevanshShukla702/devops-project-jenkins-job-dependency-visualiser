@@ -5,115 +5,97 @@
 **Course:** CSE3253 DevOps [PE6]  
 **Semester:** VI (2025–2026)  
 **Project Type:** Jenkins & CI  
-**Difficulty:** Intermediate  
+**Difficulty:** Advanced  
 
 ---
 
 ## 📌 Project Overview
 
-FlowTrace is a DevOps visualization tool that provides a clear and interactive representation of Jenkins job dependencies. It helps users understand CI/CD pipelines by displaying jobs, their execution flow, and relationships in a structured graph format.
+FlowTrace transforms from a basic academic tool into a **professional, production-grade DevOps visualization platform**. It provides interactive graphs, dependency tracing, robust metrics, and an immersive UI built for modern SRE and DevOps workflows.
+
+![FlowTrace Dashboard Screenshot](https://via.placeholder.com/800x400.png?text=FlowTrace+Dashboard+-+Real-time+Jenkins+Visualization)
 
 ---
 
 ## 🚀 Key Features
 
-- Visual representation of Jenkins job dependencies  
-- Top-to-bottom pipeline flow visualization  
-- Status-based node coloring (Success, Failed, Unstable, Not Built)  
-- Interactive graph (click nodes to view details)  
-- Upstream and downstream job tracking  
-- Real-time data fetched from Jenkins REST API  
-- Clean and modern UI for better readability  
+* **Real-Time Node Graph:** An interactive, smooth-panning vis-network graph displaying entire CI/CD environments.
+* **Deep Dependency Tracing:** Clear visual mapping of upstream vs downstream jobs.
+* **Live Status Updates & Auto-Refresh:** Constant synchronisation directly from the Jenkins REST APIs.
+* **Modern Premium UI/UX:** Complete dark-mode interface, glassmorphism panels, GSAP page transitions, and toast notifications.
+* **Intelligent Metrics Dashboard:** Job counts, success rates, and active states parsed instantly.
+* **Built-in Authentication:** Protect your infrastructure data utilizing Flask-Login sessions.
+* **Demo Mode Support:** Includes a robust offline data mocking engine for portfolio showcases without needing an active Jenkins server.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- Backend: Python 3.11, Flask  
-- Frontend: HTML5, CSS3, JavaScript (Vanilla)  
-- Visualization: vis-network  
-- Configuration: YAML  
-- API Integration: Jenkins REST API  
+- **Backend:** Python 3.11, Flask, Flask-Login, SQLite
+- **Frontend:** HTML5, CSS3, Vanilla JS, GSAP, tsParticles, vis-network
+- **Data Integrations:** Jenkins REST API
 
 ---
 
 ## 📂 Project Structure
 
+```text
 src/main/python/
-
-- api/
-  - static/
-    - graph.js
-    - style.css
-  - templates/
-    - dashboard.html
-  - app.py
-
-- services/
-  - jenkins_service.py
-
-- visualization/
-  - graph_builder.py
-
-- config/
-  - config.yaml
+├── api/
+│   ├── app.py                  # Main Flask App & Routing
+│   ├── static/                 # CSS/JS Assets (glassmorphism/GSAP/particles)
+│   └── templates/              # HTML layout (Dashboard, Landing, Auth)
+├── config/
+│   ├── config.yaml             # Settings (Auth, API credentials)
+│   └── mock_data.json          # Demo Mode static offline data
+├── models/
+│   └── user.py                 # SQLite backed User ORM
+├── services/
+│   ├── jenkins_service.py      # Live external parsing
+│   ├── mock_service.py         # Testing parsing logic
+└── visualization/
+    └── graph_builder.py        # Mapping algorithms for Graph layouts
+```
 
 ---
 
-## ⚙️ How It Works
+## ▶️ Setup Guide & How to Run
 
-1. Jenkins jobs are fetched using Jenkins REST API  
-2. Backend processes job data and builds dependency graph  
-3. API (/api/graph) returns structured JSON  
-4. Frontend fetches data and renders graph using vis-network  
-5. Users interact with nodes to view job details  
+### 1. Requirements & Installations
+Provide a virtual environment, then install dependencies:
+```bash
+python -m venv .venv
+# Activate
+# Windows: .venv\Scripts\activate
+# Linux/Mac: source .venv/bin/activate
 
----
+pip install flask flask-login requests pyyaml werkzeug
+```
 
-## ▶️ How to Run
+### 2. Configure Settings
+Copy `config.yaml` guidelines and adapt your token. To quickly test UI, enable `demo_mode: true` to bypass networking constraints.
 
-### Activate virtual environment
-Windows:
-.venv\Scripts\activate  
+### 3. Start the Platform
+```bash
+python src/main/python/api/app.py
+```
 
-Linux/Mac:
-source .venv/bin/activate  
+### 4. Open in Browser
+Visit the live local instance at:
+[http://localhost:5000](http://localhost:5000)
 
-### Install dependencies
-pip install -r requirements.txt  
-
-### Run application
-python src/main/python/api/app.py  
-
-### Open in browser
-http://localhost:5000  
-
----
-
-## 📸 Output
-
-- Interactive dependency graph  
-- Job status visualization  
-- Detailed job information panel  
+*Log in through Demo Bypass or create an admin account.*
 
 ---
 
-## 🎯 Use Case
+## 📸 Interactive Tour
 
-- Helps DevOps engineers understand CI/CD pipelines  
-- Useful for debugging pipeline flow  
-- Improves visibility of job dependencies  
-
----
-
-## 📌 Future Enhancements
-
-- Metrics dashboard (success rate, build trends)  
-- Real-time auto-refresh  
-- Multi-project support  
+* **Landing Page:** Interactive particle mesh welcoming new users.
+* **Jobs Table:** Sortable and exportable CSV listings of the current build footprint.
+* **Visual Graph:** Live node-links showcasing exact execution traces.
 
 ---
 
-## ✅ Conclusion
+## ✅ Continuous Evolution
 
-FlowTrace simplifies Jenkins pipeline visualization by converting complex job dependencies into an intuitive graphical interface, improving debugging, monitoring, and understanding of CI/CD workflows.
+FlowTrace continues to evolve. Follow future developments regarding real-time webhooks, alerting interfaces, and expanded multi-cluster mappings!

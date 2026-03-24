@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Jenkins Guide — FlowTrace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/guide.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="guide-container gs-fade-in">
+    <div class="guide-header gs-reveal-up">
+        <h1>Jenkins Concepts Guide</h1>
+        <p class="mono" style="font-size: 1.1rem; color: var(--text-secondary);">Everything you need to understand the visualizer.</p>
+    </div>
+
+    <section class="guide-section gs-reveal-up" style="--data-delay: 0.1s">
+        <h2><span>🏗️</span> What is Jenkins?</h2>
+        <p>Jenkins is the world's leading open-source automation server. It provides hundreds of plugins to support building, deploying, and automating any project. Jenkins helps development teams reliably build software through Continuous Integration and Continuous Delivery (CI/CD) pipelines.</p>
+    </section>
+
+    <section class="guide-section gs-reveal-up" style="--data-delay: 0.2s">
+        <h2><span>📦</span> What is a Jenkins Job?</h2>
+        <p>A "Job" (or Project) in Jenkins is a user-configured description of work which Jenkins should perform, such as building a piece of software, running test suites, or deploying an application to a production server.</p>
+    </section>
+
+    <section class="guide-section gs-reveal-up" style="--data-delay: 0.3s">
+        <h2><span>🔗</span> What are Job Dependencies?</h2>
+        <p>In complex architectures, jobs rely on one another. An <strong>Upstream</strong> job is a job that runs before the current job. A <strong>Downstream</strong> job is a job that is triggered after the current job finishes.</p>
+        
+        <div class="diagram-svg">
+            <svg width="400" height="100" viewBox="0 0 400 100" fill="none">
+                <!-- Upstream -->
+                <rect x="10" y="30" width="100" height="40" rx="8" fill="rgba(0,245,255,0.1)" stroke="#00f5ff" stroke-width="2"/>
+                <text x="60" y="55" fill="#fff" text-anchor="middle" font-family="monospace">Build App</text>
+                
+                <!-- Arrow 1 -->
+                <path d="M110 50 L150 50" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-dasharray="4"/>
+                <polygon points="150,45 160,50 150,55" fill="rgba(255,255,255,0.5)"/>
+                
+                <!-- Current -->
+                <rect x="160" y="20" width="120" height="60" rx="8" fill="rgba(0,255,136,0.1)" stroke="#00ff88" stroke-width="2"/>
+                <text x="220" y="55" fill="#00ff88" text-anchor="middle" font-family="monospace">Run Tests</text>
+                
+                <!-- Arrow 2 -->
+                <path d="M280 50 L320 50" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-dasharray="4"/>
+                <polygon points="320,45 330,50 320,55" fill="rgba(255,255,255,0.5)"/>
+                
+                <!-- Downstream -->
+                <rect x="330" y="30" width="60" height="40" rx="8" fill="rgba(255,184,0,0.1)" stroke="#ffb800" stroke-width="2"/>
+                <text x="360" y="55" fill="#fff" text-anchor="middle" font-family="monospace">Deploy</text>
+            </svg>
+        </div>
+        <p style="text-align:center; font-size:0.8rem; color:var(--text-secondary);">FlowTrace visualizes this flow automatically using vis-network.</p>
+    </section>
+
+    <section class="guide-section gs-reveal-up" style="--data-delay: 0.4s">
+        <h2><span>🚦</span> Understanding Pipeline Status</h2>
+        <table class="status-table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Color Code</th>
+                    <th>Meaning</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="status-pill status-success">SUCCESS</span></td>
+                    <td class="mono" style="color:var(--success-color);">Blue / Green</td>
+                    <td>The job built successfully.</td>
+                </tr>
+                <tr>
+                    <td><span class="status-pill status-failed">FAILED</span></td>
+                    <td class="mono" style="color:var(--danger-color);">Red</td>
+                    <td>The execution had fatal errors.</td>
+                </tr>
+                <tr>
+                    <td><span class="status-pill status-unstable">UNSTABLE</span></td>
+                    <td class="mono" style="color:var(--warning-color);">Yellow</td>
+                    <td>Tests failed, but the build compiled.</td>
+                </tr>
+                <tr>
+                    <td><span class="status-pill status-notbuilt">NOT BUILT</span></td>
+                    <td class="mono" style="color:var(--text-secondary);">Gray</td>
+                    <td>Pending, queued, or aborted.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section class="guide-section gs-reveal-up" style="--data-delay: 0.5s">
+        <h2><span>📖</span> Glossary</h2>
+        <div class="glossary-term">
+            <strong>Build</strong>
+            A single execution of a Jenkins job.
+        </div>
+        <div class="glossary-term">
+            <strong>Trigger</strong>
+            The event that causes a job to start (e.g., git push, cron schedule, or upstream job finishing).
+        </div>
+        <div class="glossary-term">
+            <strong>Node / Edge (Graph)</strong>
+            In FlowTrace, a Node represents a Jenkins Job, and an Edge (the connecting line) represents a dependency trigger.
+        </div>
+    </section>
+
+    <div class="try-now-cta gs-reveal-up" style="--data-delay: 0.6s">
+        <h3 style="margin-bottom: 1.5rem; font-size: 2rem; color: #fff;">Ready to see it in action?</h3>
+        <a href="/dashboard" class="btn btn-primary btn-lg" style="font-size: 1.2rem; padding: 1rem 3rem;">Go To Dashboard</a>
+    </div>
+</div>
+{% endblock %}

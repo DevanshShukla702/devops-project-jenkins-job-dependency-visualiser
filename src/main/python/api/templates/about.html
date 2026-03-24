@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}About — FlowTrace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="about-container gs-fade-in">
+    <div class="about-header gs-reveal-up">
+        <h1>FlowTrace</h1>
+        <p class="mono" style="font-size: 1.2rem; color: var(--text-secondary);">Jenkins Job Dependency Visualizer</p>
+    </div>
+
+    <section class="about-section gs-reveal-up" style="--data-delay: 0.1s">
+        <h2 class="section-title"><span>📘</span> About The Project</h2>
+        <p style="margin-bottom: 1rem;">
+            FlowTrace transforms Jenkins pipelines from standard text logs into fully interactive, auto-updating dependency graphs. 
+            It is designed to solve the complexity of large scale CI/CD setups where tracing upstreams, downstreams, and build failures takes minutes.
+        </p>
+        <p style="margin-bottom: 1.5rem;">
+            Built as a professional portfolio tool and scalable utility for DevOps engineers, FlowTrace seamlessly sits on top of any Jenkins instance via REST API.
+        </p>
+        
+        <h4 style="color: #fff; margin-bottom: 1rem;">Tech Stack Built With:</h4>
+        <div class="tech-cards">
+            <span class="tech-chip">Python 3.11</span>
+            <span class="tech-chip">Flask</span>
+            <span class="tech-chip">vis-network</span>
+            <span class="tech-chip">Vanilla JS</span>
+            <span class="tech-chip">GSAP</span>
+            <span class="tech-chip">Jenkins REST API</span>
+        </div>
+    </section>
+
+    <section class="about-section gs-reveal-up" style="--data-delay: 0.3s">
+        <h2 class="section-title"><span>👨‍💻</span> About The Developer</h2>
+        <div class="dev-profile">
+            <div class="avatar-placeholder">D</div>
+            <div class="dev-details">
+                <h3>Devansh Shukla</h3>
+                <div class="mono">Reg No: 23FE10CSE00741</div>
+                <div class="mono">Course: CSE3253 DevOps [PE6] | Semester VI (2025–2026)</div>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">
+                    Passionate software engineer building resilient CI/CD tools, scalable backends, and beautiful user interfaces.
+                </p>
+                <div class="dev-links">
+                    <a href="https://github.com" target="_blank" class="btn btn-outline">GitHub Profile</a>
+                    <a href="https://linkedin.com" target="_blank" class="btn btn-outline">LinkedIn Connect</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section gs-reveal-up" style="--data-delay: 0.5s">
+        <h2 class="section-title"><span>🚀</span> Future Roadmap</h2>
+        <div class="roadmap-grid">
+            <div class="roadmap-card">
+                <h4>v1.1 Metrics Hub</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Advanced historical charts (Chart.js) and build time analysis.</p>
+            </div>
+            <div class="roadmap-card">
+                <h4>v1.2 Real-time Webhooks</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Move from polling to true WebSocket updates for <1s latency.</p>
+            </div>
+            <div class="roadmap-card">
+                <h4>v2.0 Multi-Server</h4>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Aggregate pipeline views across multiple Jenkins clusters.</p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
