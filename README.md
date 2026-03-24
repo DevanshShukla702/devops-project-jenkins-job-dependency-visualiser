@@ -1,17 +1,9 @@
 # FlowTrace: Jenkins Job Dependency Visualiser
-
-**Student Name:** Devansh Shukla  
-**Registration No:** 23FE10CSE00741  
-**Course:** CSE3253 DevOps [PE6]  
-**Semester:** VI (2025–2026)  
-**Project Type:** Jenkins & CI  
-**Difficulty:** Advanced  
-
 ---
 
 ## 📌 Project Overview
 
-FlowTrace transforms from a basic academic tool into a **professional, production-grade DevOps visualization platform**. It provides interactive graphs, dependency tracing, robust metrics, and an immersive UI built for modern SRE and DevOps workflows.
+FlowTrace is a **professional, production-grade DevOps visualization platform**. It provides interactive graphs, dependency tracing, robust metrics, and an immersive UI built for modern SRE and DevOps workflows.
 
 ![FlowTrace Dashboard Screenshot](https://via.placeholder.com/800x400.png?text=FlowTrace+Dashboard+-+Real-time+Jenkins+Visualization)
 
