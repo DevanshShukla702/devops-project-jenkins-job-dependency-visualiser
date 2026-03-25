@@ -64,12 +64,49 @@
         <header class="navbar">
             <div class="nav-brand">
                 <a href="/" style="display: flex; align-items: center; gap: var(--space-sm); text-decoration: none;">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <circle cx="11" cy="4" r="2.5" fill="#00f5ff"/>
-                        <circle cx="5" cy="15" r="2.5" fill="#00ff88"/>
-                        <circle cx="17" cy="15" r="2.5" fill="#00ff88"/>
-                        <line x1="11" y1="6.5" x2="5" y2="12.5" stroke="#00f5ff" stroke-width="1.2" stroke-linecap="round"/>
-                        <line x1="11" y1="6.5" x2="17" y2="12.5" stroke="#00f5ff" stroke-width="1.2" stroke-linecap="round"/>
+                    <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="flowtrace-logo">
+                        <style>
+                            .flowtrace-logo { filter: drop-shadow(0 0 6px rgba(0,245,255,0.4)); overflow: visible; }
+                            .ft-pulse { animation: ft-glow 2s ease-in-out infinite alternate; }
+                            .ft-spin { transform-origin: 32px 32px; animation: ft-spin 20s linear infinite; }
+                            .ft-float { animation: ft-float 3s ease-in-out infinite alternate; }
+                            @keyframes ft-glow { 0% { filter: drop-shadow(0 0 2px rgba(0,255,136,0.3)); transform: scale(0.9); } 100% { filter: drop-shadow(0 0 10px rgba(0,255,136,0.9)); transform: scale(1.1); } }
+                            @keyframes ft-spin { 100% { transform: rotate(360deg); } }
+                            @keyframes ft-float { 0% { transform: translateY(-2px); } 100% { transform: translateY(2px); } }
+                        </style>
+                        <defs>
+                            <linearGradient id="ft-grad-edge" x1="0" y1="0" x2="64" y2="64">
+                                <stop offset="0%" stop-color="#00f5ff"/>
+                                <stop offset="100%" stop-color="#00ff88"/>
+                            </linearGradient>
+                            <linearGradient id="ft-grad-fill" x1="32" y1="4" x2="32" y2="60">
+                                <stop offset="0%" stop-color="rgba(0, 245, 255, 0.25)"/>
+                                <stop offset="100%" stop-color="rgba(0, 255, 136, 0.05)"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        <g class="ft-float">
+                            <!-- Rotating Hexagon -->
+                            <g class="ft-spin">
+                                <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" stroke="url(#ft-grad-edge)" stroke-width="2.5" fill="url(#ft-grad-fill)" stroke-dasharray="8 4" />
+                                <polygon points="32,16 46,24 46,40 32,48 18,40 18,24" stroke="#00f5ff" stroke-width="1.5" fill="none" opacity="0.5" />
+                            </g>
+                            
+                            <!-- Internal Connections -->
+                            <path d="M32 4 L32 32 L56 46" stroke="#00f5ff" stroke-width="2.5" opacity="0.9" stroke-linecap="round"/>
+                            <path d="M32 32 L8 46" stroke="#00ff88" stroke-width="2.5" opacity="0.9" stroke-linecap="round"/>
+                            
+                            <!-- Outer Nodes -->
+                            <circle cx="32" cy="4" r="4.5" fill="#00f5ff" />
+                            <circle cx="56" cy="18" r="3.5" fill="#00ff88" opacity="0.8"/>
+                            <circle cx="56" cy="46" r="4.5" fill="#00ff88" />
+                            <circle cx="32" cy="60" r="3.5" fill="#00f5ff" opacity="0.8"/>
+                            <circle cx="8" cy="46" r="4.5" fill="#00f5ff" />
+                            <circle cx="8" cy="18" r="3.5" fill="#00ff88" opacity="0.8"/>
+                            
+                            <!-- Static Center Node -->
+                            <circle cx="32" cy="32" r="6" fill="#fff" class="ft-pulse" style="transform-origin: 32px 32px;"/>
+                        </g>
                     </svg>
                     <span class="logo-text">FlowTrace</span>
                 </a>

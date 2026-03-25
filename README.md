@@ -95,7 +95,7 @@ python src/main/python/api/app.py
 Visit the live local instance at:
 **[http://localhost:5000](http://localhost:5000)**
 
-*Log in through the Demo Bypass on the Welcome screen, or register an administrative root account to interact with the map.*
+*Log in through the Demo Bypass on the Welcome screen, or register an administrative root account to interact with the dashboard.*
 
 ---
 

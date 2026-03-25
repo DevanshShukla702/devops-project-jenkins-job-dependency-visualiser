@@ -174,7 +174,10 @@
 
 .metric-card {
   background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-xl);
   border-left: 3px solid transparent;
@@ -285,9 +288,11 @@
 /* Right Detail Panel */
 .detail-panel {
   width: 350px;
-  background: var(--bg-surface-2);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-left: 1px solid var(--border);
-  box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.8);
   position: absolute;
   right: -400px;
   top: 0;

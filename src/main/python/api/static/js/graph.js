@@ -17,7 +17,7 @@ function getNodeColor(status) {
 
 function getGraphOptions() {
     const style = getComputedStyle(document.documentElement);
-    const get = (v) => style.getPropertyValue(v).trim();
+    const get = (v) => style.getPropertyValue(v).trim() || (v.includes('bg') ? '#0B0E14' : '#00F2FF');
 
     return {
       nodes: {
@@ -33,11 +33,11 @@ function getGraphOptions() {
           background: get('--node-bg'),
           border: get('--node-border-success'),
           highlight: {
-            background: get('--bg-surface-2'),
+            background: get('--node-bg'),
             border: get('--accent-cyan')
           },
           hover: {
-            background: get('--bg-surface-2'),
+            background: get('--node-bg'),
             border: get('--accent-cyan')
           }
         },
@@ -85,6 +85,9 @@ function getGraphOptions() {
 function initGraph(containerId, nodesData, edgesData) {
     const container = document.getElementById(containerId);
     
+    const style = getComputedStyle(document.documentElement);
+    const get = (v) => style.getPropertyValue(v).trim() || '#0B0E14';
+    
     // Configure nodes for UI spec
     const nodes = new vis.DataSet(nodesData.map(n => {
         const c = getNodeColor(n.status || n.color);
@@ -98,10 +101,10 @@ function initGraph(containerId, nodesData, edgesData) {
             id: n.id,
             label: labelStr,
             color: {
-                background: getComputedStyle(document.documentElement).getPropertyValue('--node-bg').trim(),
+                background: get('--node-bg'),
                 border: c.border,
-                highlight: { background: getComputedStyle(document.documentElement).getPropertyValue('--bg-surface-2').trim(), border: getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim() },
-                hover: { background: getComputedStyle(document.documentElement).getPropertyValue('--bg-surface-2').trim(), border: getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim() }
+                highlight: { background: get('--node-bg'), border: get('--accent-cyan') },
+                hover: { background: get('--node-bg'), border: get('--accent-cyan') }
             },
             shadow: { color: c.shadow },
             _orig_border: c.border,
@@ -110,7 +113,12 @@ function initGraph(containerId, nodesData, edgesData) {
         };
     }));
 
-    const edges = new vis.DataSet(edgesData);
+    const edges = new vis.DataSet(edgesData.map(e => {
+        return {
+            ...e,
+            arrows: { to: { enabled: true, scaleFactor: 0.65, type: 'arrow' } }
+        };
+    }));
 
     const data = { nodes, edges };
     const options = getGraphOptions();
@@ -235,12 +243,12 @@ window.traceNodePath = function(nodeId) {
     
     const allNs = network.body.data.nodes.get();
     const style = getComputedStyle(document.documentElement);
-    const get = (v) => style.getPropertyValue(v).trim();
+    const get = (v) => style.getPropertyValue(v).trim() || '#0B0E14';
     
     const updatesN = allNs.map(n => ({
         id: n.id,
         color: connectedNodes.has(n.id) 
-            ? { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--bg-surface-2'), border: get('--accent-cyan') }, hover: { background: get('--bg-surface-2'), border: get('--accent-cyan') } } 
+            ? { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--node-bg'), border: get('--accent-cyan') }, hover: { background: get('--node-bg'), border: get('--accent-cyan') } } 
             : { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)', highlight: { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)' }, hover: { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)' } },
         font: connectedNodes.has(n.id) ? { color: get('--node-text') } : { color: 'rgba(100,100,100,0.4)' }
     }));
@@ -267,11 +275,11 @@ window.resetTrace = function() {
     
     const allNs = network.body.data.nodes.get();
     const style = getComputedStyle(document.documentElement);
-    const get = (v) => style.getPropertyValue(v).trim();
+    const get = (v) => style.getPropertyValue(v).trim() || '#0B0E14';
     
     const updatesN = allNs.map(n => ({
         id: n.id,
-        color: { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--bg-surface-2'), border: get('--accent-cyan') }, hover: { background: get('--bg-surface-2'), border: get('--accent-cyan') } },
+        color: { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--node-bg'), border: get('--accent-cyan') }, hover: { background: get('--node-bg'), border: get('--accent-cyan') } },
         font: { color: get('--node-text') }
     }));
     network.body.data.nodes.update(updatesN);

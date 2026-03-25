@@ -11,20 +11,22 @@
 
 .guide-header h1 {
   font-size: 3.5rem;
-  background: linear-gradient(90deg, #fff, var(--accent-color));
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-cyan));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
 }
 
 .guide-section {
-  background: var(--panel-bg);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--bg-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 2.5rem;
   margin-bottom: 2rem;
   transition: transform 0.3s;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
 }
 
 .guide-section:hover {
@@ -33,7 +35,7 @@
 }
 
 .guide-section h2 {
-  color: var(--accent-color);
+  color: var(--accent-cyan);
   font-size: 1.5rem;
   margin-bottom: 1rem;
   display: flex;
@@ -76,16 +78,16 @@
 }
 
 .glossary-term {
-  background: rgba(255,255,255,0.03);
+  background: var(--bg-surface-2);
   padding: 1rem;
   border-radius: var(--radius-sm);
   margin-bottom: 1rem;
-  border-left: 2px solid var(--accent-color);
+  border-left: 2px solid var(--accent-cyan);
 }
 
 .glossary-term strong {
   display: block;
-  color: #fff;
+  color: var(--text-primary);
   font-family: var(--font-mono);
   margin-bottom: 0.5rem;
 }

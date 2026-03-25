@@ -1,11 +1,11 @@
 :root,
 [data-theme="dark"] {
   /* Backgrounds */
-  --bg-app:         #0d1117;
-  --bg-surface:     #161b22;
-  --bg-surface-2:   #1c2128;
-  --bg-surface-3:   #21262d;
-  --bg-overlay:     rgba(13, 17, 23, 0.85);
+  --bg-app:         #0B0E14;
+  --bg-surface:     rgba(11, 14, 20, 0.6);
+  --bg-surface-2:   rgba(255, 255, 255, 0.03);
+  --bg-surface-3:   rgba(255, 255, 255, 0.05);
+  --bg-overlay:     rgba(11, 14, 20, 0.85);
 
   /* Text */
   --text-primary:   #e6edf3;
@@ -14,14 +14,14 @@
   --text-inverse:   #0d1117;
 
   /* Borders */
-  --border:         rgba(255, 255, 255, 0.08);
-  --border-hover:   rgba(255, 255, 255, 0.18);
-  --border-active:  rgba(255, 255, 255, 0.30);
+  --border:         rgba(255, 255, 255, 0.15);
+  --border-hover:   rgba(255, 255, 255, 0.25);
+  --border-active:  rgba(255, 255, 255, 0.35);
 
   /* Accents — unchanged in both themes */
-  --accent-cyan:    #00f5ff;
+  --accent-cyan:    #00F2FF;
   --accent-green:   #00ff88;
-  --accent-red:     #ff4444;
+  --accent-red:     #dc143c;
   --accent-amber:   #ffb800;
   --accent-grey:    #4a5568;
 
@@ -29,9 +29,9 @@
   --status-success-bg:    rgba(0, 255, 136, 0.12);
   --status-success-text:  #00ff88;
   --status-success-border:rgba(0, 255, 136, 0.30);
-  --status-failed-bg:     rgba(255, 68, 68, 0.12);
-  --status-failed-text:   #ff6b6b;
-  --status-failed-border: rgba(255, 68, 68, 0.30);
+  --status-failed-bg:     rgba(220, 20, 60, 0.12);
+  --status-failed-text:   #dc143c;
+  --status-failed-border: rgba(220, 20, 60, 0.30);
   --status-unstable-bg:   rgba(255, 184, 0, 0.12);
   --status-unstable-text: #ffb800;
   --status-unstable-border:rgba(255, 184, 0, 0.30);
@@ -40,30 +40,30 @@
   --status-notbuilt-border:rgba(74, 85, 104, 0.30);
 
   /* Graph node colours */
-  --node-bg:          #161b22;
+  --node-bg:          #0B0E14;
   --node-border-success:  #00ff88;
-  --node-border-failed:   #ff4444;
+  --node-border-failed:   #dc143c;
   --node-border-unstable: #ffb800;
   --node-border-notbuilt: #4a5568;
   --node-text:        #e6edf3;
   --node-shadow-success:  rgba(0, 255, 136, 0.25);
-  --node-shadow-failed:   rgba(255, 68, 68, 0.25);
+  --node-shadow-failed:   rgba(220, 20, 60, 0.25);
   --node-shadow-unstable: rgba(255, 184, 0, 0.25);
-  --edge-color:       rgba(0, 245, 255, 0.45);
-  --edge-hover:       rgba(0, 245, 255, 0.90);
+  --edge-color:       rgba(0, 242, 255, 0.45);
+  --edge-hover:       rgba(0, 242, 255, 0.90);
 
   /* Component tokens */
-  --input-bg:         #1c2128;
-  --input-border:     rgba(255,255,255,0.10);
-  --input-focus:      rgba(0, 245, 255, 0.40);
-  --card-bg:          #161b22;
-  --card-border:      rgba(255,255,255,0.08);
-  --pill-active-bg:   #00f5ff;
-  --pill-active-text: #0d1117;
-  --btn-bg:           #1c2128;
-  --btn-border:       rgba(255,255,255,0.12);
+  --input-bg:         rgba(0, 0, 0, 0.2);
+  --input-border:     rgba(255,255,255,0.15);
+  --input-focus:      rgba(0, 242, 255, 0.40);
+  --card-bg:          rgba(11, 14, 20, 0.4);
+  --card-border:      rgba(255,255,255,0.15);
+  --pill-active-bg:   #00F2FF;
+  --pill-active-text: #0B0E14;
+  --btn-bg:           rgba(255, 255, 255, 0.03);
+  --btn-border:       rgba(255,255,255,0.15);
   --btn-text:         #e6edf3;
-  --table-row-hover:  rgba(255,255,255,0.04);
+  --table-row-hover:  rgba(0, 242, 255, 0.05);
   --table-header-bg:  rgba(255,255,255,0.03);
   --scrollbar-thumb:  rgba(255,255,255,0.12);
 
@@ -187,8 +187,8 @@ button { font-family: var(--font-ui); }
 .navbar {
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   height: var(--navbar-height);
   padding: 0 var(--space-xl);
   position: sticky;
@@ -497,3 +497,6 @@ input, button, a, .pill, .nav-link {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+\n.table-row:hover {
+    box-shadow: inset 0 0 15px rgba(0, 242, 255, 0.2);
+}\n
