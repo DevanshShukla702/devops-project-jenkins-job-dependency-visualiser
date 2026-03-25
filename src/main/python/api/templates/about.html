@@ -7,75 +7,119 @@
 {% endblock %}
 
 {% block content %}
-<div class="about-container gs-fade-in">
-    <div class="about-header gs-reveal-up">
-        <h1>FlowTrace</h1>
-        <p class="mono" style="font-size: 1.2rem; color: var(--text-secondary);">Jenkins Job Dependency Visualizer</p>
+<div class="about-page">
+    <div class="about-hero reveal">
+        <div class="about-hero-eyebrow">Project Overview</div>
+        <h1 class="about-hero-title">FlowTrace Dependency Visualizer</h1>
+        <p class="about-hero-subtitle">
+            A continuous integration intelligence layer. Trace workflows, isolate pipeline execution paths, and map
+            recursive build dependencies visually on top of any active Jenkins instance via REST API.
+        </p>
     </div>
 
-    <section class="about-section gs-reveal-up" style="--data-delay: 0.1s">
-        <h2 class="section-title"><span>📘</span> About The Project</h2>
-        <p style="margin-bottom: 1rem;">
-            FlowTrace transforms Jenkins pipelines from standard text logs into fully interactive, auto-updating
-            dependency graphs.
-            It is designed to solve the complexity of large scale CI/CD setups where tracing upstreams, downstreams, and
-            build failures takes minutes.
-        </p>
-        <p style="margin-bottom: 1.5rem;">
-            Built as a professional portfolio tool and scalable utility for DevOps engineers, FlowTrace seamlessly sits
-            on top of any Jenkins instance via REST API.
+    <!-- Developer Profile -->
+    <div class="about-card reveal">
+        <div class="about-section-header">
+            <div class="about-section-icon" style="font-size: 18px;">👤</div>
+            <h3 class="about-section-title">Developer Profile</h3>
+        </div>
+
+        <p class="about-body-text" style="font-weight: 600; color: var(--text-primary);">
+            Devansh Shukla — Dashboard Developer & Data Analyst
         </p>
 
-        <h4 style="color: #fff; margin-bottom: 1rem;">Tech Stack Built With:</h4>
-        <div class="tech-cards">
-            <span class="tech-chip">Python 3.11</span>
-            <span class="tech-chip">Flask</span>
-            <span class="tech-chip">vis-network</span>
-            <span class="tech-chip">Vanilla JS</span>
-            <span class="tech-chip">GSAP</span>
-            <span class="tech-chip">Jenkins REST API</span>
-        </div>
-    </section>
+        <p class="about-body-text">
+            Detail-oriented CS undergraduate certified in Data Analysis (Deloitte, 2026) and Agile Project Management,
+            with hands-on experience building interactive dashboards, interpreting data trends, and applying ETL and
+            data wrangling concepts. Proficient in Python, Tableau, and SQL with working knowledge of Power BI and
+            Excel; currently expanding expertise in Alteryx. Seeking to contribute analytical thinking and dashboard
+            development skills to a data visualization role in a consulting environment.
+        </p>
 
-    <section class="about-section gs-reveal-up" style="--data-delay: 0.3s">
-        <h2 class="section-title"><span>👨‍💻</span> About The Developer</h2>
-        <div class="dev-profile">
-            <div class="avatar-placeholder">D</div>
-            <div class="dev-details">
-                <h3>Devansh Shukla</h3>
-                <div class="mono" style="color: var(--accent-color);">Data Analyst & Visualization Specialist</div>
-                <p style="margin-top: 1rem; color: var(--text-secondary); line-height: 1.6;">
-                    Detail-oriented CS undergraduate certified in Data Analysis (Deloitte, 2026) and Agile Project Management, with hands-on experience building interactive dashboards, interpreting data trends, and applying data wrangling concepts. Proficient in Python, Tableau, and SQL with working knowledge of Power BI and Excel; currently expanding expertise in Alteryx. Seeking to contribute analytical thinking and dashboard development skills to a data visualization role in a consulting environment.
-                </p>
-                <div class="dev-links">
-                    <a href="https://github.com/DevanshShukla702" target="_blank" class="btn btn-outline">GitHub
-                        Profile</a>
-                    <a href="https://www.linkedin.com/in/devanshshukla418/" target="_blank"
-                        class="btn btn-outline">LinkedIn Connect</a>
-                </div>
-            </div>
+        <div style="display: flex; gap: 12px; margin-top: 16px;">
+            <a href="https://github.com/DevanshShukla702" target="_blank" class="tech-badge"
+                style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                </svg>
+                GitHub
+            </a>
+            <a href="https://www.linkedin.com/in/devanshshukla418/" target="_blank" class="tech-badge"
+                style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                        d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                </svg>
+                LinkedIn
+            </a>
         </div>
-    </section>
+    </div>
 
-    <section class="about-section gs-reveal-up" style="--data-delay: 0.5s">
-        <h2 class="section-title"><span>🚀</span> Future Roadmap</h2>
-        <div class="roadmap-grid">
-            <div class="roadmap-card">
-                <h4>v1.1 Metrics Hub</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Advanced historical charts (Chart.js) and
-                    build time analysis.</p>
+    <!-- The Engine -->
+    <div class="about-card reveal">
+        <div class="about-section-header">
+            <div class="about-section-icon">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="9" cy="5" r="2" fill="var(--accent-cyan)" />
+                    <circle cx="4" cy="13" r="2" fill="var(--accent-green)" />
+                    <circle cx="14" cy="13" r="2" fill="var(--accent-green)" />
+                    <line x1="9" y1="7" x2="4" y2="11" stroke="var(--accent-cyan)" stroke-width="1.2"
+                        stroke-linecap="round" />
+                    <line x1="9" y1="7" x2="14" y2="11" stroke="var(--accent-cyan)" stroke-width="1.2"
+                        stroke-linecap="round" />
+                </svg>
             </div>
-            <div class="roadmap-card">
-                <h4>v1.2 Real-time Webhooks</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Move from polling to true WebSocket updates
-                    for <1s latency.</p>
-            </div>
-            <div class="roadmap-card">
-                <h4>v2.0 Multi-Server</h4>
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">Aggregate pipeline views across multiple
-                    Jenkins clusters.</p>
-            </div>
+            <h3 class="about-section-title">The Engine Framework</h3>
         </div>
-    </section>
+
+        <p class="about-body-text">
+            FlowTrace automatically extracts topological data natively from upstream and downstream configuration
+            definitions within Jenkins. It converts this relational geometry into a fully dynamic graph mapping to track
+            historical execution run-times natively.
+        </p>
+
+        <div class="tech-stack-label">Core Tech Stack Built With:</div>
+        <div class="tech-stack-list">
+            <span class="tech-badge">Python 3</span>
+            <span class="tech-badge">Flask & Login</span>
+            <span class="tech-badge">SQLite</span>
+            <span class="tech-badge">vis-network</span>
+            <span class="tech-badge">GSAP</span>
+            <span class="tech-badge">CountUp.js</span>
+            <span class="tech-badge">Tableau & SQL</span>
+        </div>
+    </div>
+
+    <!-- Future Roadmap -->
+    <div class="about-card reveal">
+        <div class="about-section-header">
+            <div class="about-section-icon" style="font-size: 18px;">🚀</div>
+            <h3 class="about-section-title">Future Feature Roadmap</h3>
+        </div>
+
+        <p class="about-body-text">
+            <strong>v1.1 Metrics Hub:</strong> Integrate Chart.js for historical build-time analysis.<br>
+            <strong>v1.2 Webhooks:</strong> Transition from database polling to WebSocket-based live updates.<br>
+            <strong>v2.0 Multi-Server:</strong> Aggregate recursive pipeline structures across multiple Jenkins clusters
+            seamlessly.
+        </p>
+    </div>
 </div>
+
+<script>
+    // Intersection Observer for reveal animation
+    document.addEventListener('DOMContentLoaded', () => {
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    observer.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    });
+</script>
 {% endblock %}

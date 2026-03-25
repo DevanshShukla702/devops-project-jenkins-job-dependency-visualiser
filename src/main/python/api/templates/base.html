@@ -6,7 +6,9 @@
     <title>{% block title %}FlowTrace — Jenkins Visualizer{% endblock %}</title>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Orbitron:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
@@ -14,42 +16,182 @@
 
     <!-- GSAP for Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-    <!-- vis-network -->
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body class="theme-dark">
-
     <div id="toast-container" class="toast-container"></div>
 
-    <header class="navbar">
-        <div class="nav-brand">
-            <a href="/">
-                <span class="logo-icon">⚙️</span>
-                <span class="logo-text">FlowTrace</span>
-            </a>
+    <!-- Settings Modal overlay -->
+    <div class="modal-overlay" id="settings-modal" onclick="if(event.target === this) closeSettings()">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <span class="modal-title">⚙️ Preferences</span>
+                <button class="modal-close" onclick="closeSettings()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Enable UI Animations</h4>
+                        <p>Toggle GSAP & interface page transitions.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-anims" checked onchange="toggleSettingAnim()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Enable Light Theme</h4>
+                        <p>Switch to daylight presentation mode.</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-theme" onchange="toggleSettingTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <h4>Core Engine Sync</h4>
+                        <p>Jenkins configuration controlled globally via <code class="mono">config.yaml</code>.</p>
+                    </div>
+                    <div><span class="status-pill status-success">LOCKED</span></div>
+                </div>
+            </div>
         </div>
-        <nav class="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/jobs">Jobs</a>
-            <a href="/about">About</a>
-            <a href="/jenkins-guide">Jenkins Guide</a>
-        </nav>
-        <div class="nav-user">
-            {% if current_user and current_user.is_authenticated %}
-                <span class="user-avatar">{{ current_user.username[0] | upper }}</span>
-                <a href="/logout" class="btn btn-outline" style="margin-left: 10px; font-size: 0.8rem; padding: 4px 8px;">Logout</a>
-            {% else %}
-                <a href="/login" class="btn btn-primary">Login</a>
-            {% endif %}
-        </div>
-        <!-- Mobile Nav Toggle -->
-        <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
-    </header>
+    </div>
 
-    <main class="page-content" id="main-content">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="app-layout">
+        <header class="navbar">
+            <div class="nav-brand">
+                <a href="/" style="display: flex; align-items: center; gap: var(--space-sm); text-decoration: none;">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="11" cy="4" r="2.5" fill="#00f5ff"/>
+                        <circle cx="5" cy="15" r="2.5" fill="#00ff88"/>
+                        <circle cx="17" cy="15" r="2.5" fill="#00ff88"/>
+                        <line x1="11" y1="6.5" x2="5" y2="12.5" stroke="#00f5ff" stroke-width="1.2" stroke-linecap="round"/>
+                        <line x1="11" y1="6.5" x2="17" y2="12.5" stroke="#00f5ff" stroke-width="1.2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="logo-text">FlowTrace</span>
+                </a>
+            </div>
+            
+            <nav class="nav-links" id="main-nav">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/jobs" class="nav-link">Jobs</a>
+                <a href="/about" class="nav-link">About</a>
+                <a href="/jenkins-guide" class="nav-link">Jenkins Guide</a>
+            </nav>
+
+            <div class="nav-user">
+                {% if current_user and current_user.is_authenticated %}
+                    <div class="user-avatar" onclick="document.getElementById('avatar-dropdown').classList.toggle('show')">
+                        {% if current_user.username == "demo" %}
+                            👤
+                        {% else %}
+                            {{ current_user.name[0]|upper if current_user.name else current_user.username[0]|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="avatar-dropdown" id="avatar-dropdown">
+                        <a href="/profile">Profile</a>
+                        <a href="#" onclick="openSettings(); return false;">Settings</a>
+                        <a href="/logout" class="logout-btn">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="btn btn-primary">Login</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <div class="app-body">
+            <main class="main-content" id="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Active Nav Link logic
+        document.addEventListener("DOMContentLoaded", () => {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('#main-nav .nav-link');
+            links.forEach(link => {
+                const href = link.getAttribute('href');
+                if (currentPath === href || (currentPath !== '/' && href !== '/' && currentPath.startsWith(href))) {
+                    link.classList.add('active');
+                }
+            });
+
+            // Close dropdown securely
+            document.addEventListener('click', (e) => {
+                const avatar = document.querySelector('.user-avatar');
+                const dropdown = document.getElementById('avatar-dropdown');
+                if (avatar && dropdown && !avatar.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('show');
+                }
+            });
+        });
+
+        // Settings Modal logic
+        function openSettings() {
+            document.getElementById('settings-modal').classList.add('show');
+            const dropdown = document.getElementById('avatar-dropdown');
+            if(dropdown) dropdown.classList.remove('show');
+        }
+        function closeSettings() {
+            document.getElementById('settings-modal').classList.remove('show');
+        }
+        function toggleSettingAnim() {
+            const isChecked = document.getElementById('toggle-anims').checked;
+            localStorage.setItem('flowtrace_anims', isChecked ? 'enabled' : 'disabled');
+            if(window.showToast) window.showToast("Animation preference cached. Reload to apply.", "success");
+        }
+
+        function toggleSettingTheme() {
+            const isLight = document.getElementById('toggle-theme').checked;
+            localStorage.setItem('flowtrace_theme', isLight ? 'light' : 'dark');
+            applyTheme(isLight);
+        }
+
+        function applyTheme(isLight) {
+            const html = document.documentElement;
+            html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+            
+            // If on dashboard, update graph nodes canvas colors dynamically
+            if (window.network && window.network.body && window.network.body.data.nodes && typeof getGraphOptions === 'function') {
+                window.network.setOptions(getGraphOptions());
+                
+                const updates = window.network.body.data.nodes.get().map(n => {
+                    const c = getNodeColor(n.status || n.color);
+                    return {
+                        id: n.id,
+                        color: { 
+                            background: getComputedStyle(document.documentElement).getPropertyValue('--node-bg').trim(),
+                            border: c.border,
+                        },
+                        shadow: { color: c.shadow },
+                        font: { color: getComputedStyle(document.documentElement).getPropertyValue('--node-text').trim() }
+                    };
+                });
+                window.network.body.data.nodes.update(updates);
+            }
+        }
+
+        // Apply settings on boot
+        document.addEventListener("DOMContentLoaded", () => {
+            const animPref = localStorage.getItem('flowtrace_anims') !== 'disabled';
+            const toggleObj = document.getElementById('toggle-anims');
+            if(toggleObj) toggleObj.checked = animPref;
+            if(!animPref) {
+                document.body.classList.add('no-animations');
+                if(window.gsap) gsap.globalTimeline.timeScale(100); 
+            }
+            
+            const isLight = localStorage.getItem('flowtrace_theme') === 'light';
+            const themeObj = document.getElementById('toggle-theme');
+            if(themeObj) themeObj.checked = isLight;
+            applyTheme(isLight);
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>

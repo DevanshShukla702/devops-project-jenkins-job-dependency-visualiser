@@ -70,5 +70,21 @@ class User(UserMixin):
         conn.close()
         return success
 
+    @staticmethod
+    def update(user_id, name, email, new_password_hash=None):
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        try:
+            if new_password_hash:
+                c.execute('UPDATE users SET name=?, email=?, password_hash=? WHERE id=?', (name, email, new_password_hash, user_id))
+            else:
+                c.execute('UPDATE users SET name=?, email=? WHERE id=?', (name, email, user_id))
+            conn.commit()
+            success = True
+        except sqlite3.IntegrityError:
+            success = False
+        conn.close()
+        return success
+
     def check_password(self, password):
         return check_password_hash(getattr(self, 'password_hash', ''), password)

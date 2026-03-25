@@ -2,19 +2,92 @@ let network = null;
 let allNodes = [];
 let allEdges = [];
 
-const colorMap = {
-    'success': { border: '#00ff88', background: '#092b28', highlight: '#00ff88' },
-    'failed': { border: '#ff4444', background: '#2e0c16', highlight: '#ff4444' },
-    'unstable': { border: '#ffb800', background: '#2e2416', highlight: '#ffb800' },
-    'notbuilt': { border: '#64748b', background: '#171c28', highlight: '#94a3b8' }
-};
+function getNodeColor(status) {
+    const style = getComputedStyle(document.documentElement);
+    const get = (v) => style.getPropertyValue(v).trim() || v;
+    const map = {
+      'success':   { border: get('--node-border-success'), shadow: get('--node-shadow-success') },
+      'failed':    { border: get('--node-border-failed'), shadow: get('--node-shadow-failed') },
+      'unstable':  { border: get('--node-border-unstable'), shadow: get('--node-shadow-unstable') },
+      'not_built': { border: get('--node-border-notbuilt'), shadow: 'rgba(100,116,139,0.15)' },
+      'notbuilt':  { border: get('--node-border-notbuilt'), shadow: 'rgba(100,116,139,0.15)' }
+    };
+    return map[status?.toLowerCase()] || map['notbuilt'];
+}
+
+function getGraphOptions() {
+    const style = getComputedStyle(document.documentElement);
+    const get = (v) => style.getPropertyValue(v).trim();
+
+    return {
+      nodes: {
+        shape: 'box',
+        borderWidth: 1.5,
+        borderWidthSelected: 2.5,
+        font: {
+          face: 'JetBrains Mono, monospace',
+          size: 12,
+          color: get('--node-text')
+        },
+        color: {
+          background: get('--node-bg'),
+          border: get('--node-border-success'),
+          highlight: {
+            background: get('--bg-surface-2'),
+            border: get('--accent-cyan')
+          },
+          hover: {
+            background: get('--bg-surface-2'),
+            border: get('--accent-cyan')
+          }
+        },
+        shadow: {
+          enabled: true,
+          color: get('--node-shadow-success'),
+          size: 10,
+          x: 0, y: 0
+        },
+        margin: { top: 8, bottom: 8, left: 12, right: 12 }
+      },
+      edges: {
+        color: {
+          color: get('--edge-color'),
+          highlight: get('--edge-hover'),
+          hover: get('--edge-hover')
+        },
+        width: 1.2,
+        arrows: { to: { enabled: true, scaleFactor: 0.65 } },
+        smooth: {
+          type: 'cubicBezier',
+          forceDirection: 'vertical',
+          roundness: 0.4
+        }
+      },
+      physics: { enabled: false },
+      layout: {
+        hierarchical: {
+          direction: 'UD',
+          sortMethod: 'directed',
+          levelSeparation: 100,
+          nodeSpacing: 140
+        }
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 200,
+        zoomView: true,
+        dragView: true
+      },
+      background: { color: 'transparent' }
+    };
+}
 
 function initGraph(containerId, nodesData, edgesData) {
     const container = document.getElementById(containerId);
     
     // Configure nodes for UI spec
     const nodes = new vis.DataSet(nodesData.map(n => {
-        const c = colorMap[n.status] || colorMap['notbuilt'];
+        const c = getNodeColor(n.status || n.color);
         
         let labelStr = n.label;
         if(n.build_number) {
@@ -24,73 +97,23 @@ function initGraph(containerId, nodesData, edgesData) {
         return {
             id: n.id,
             label: labelStr,
-            shape: 'box',
-            margin: { top: 12, right: 20, bottom: 12, left: 20 },
             color: {
+                background: getComputedStyle(document.documentElement).getPropertyValue('--node-bg').trim(),
                 border: c.border,
-                background: c.background,
-                highlight: {
-                    border: c.highlight,
-                    background: c.background
-                },
-                hover: {
-                    border: c.highlight,
-                    background: c.background
-                }
+                highlight: { background: getComputedStyle(document.documentElement).getPropertyValue('--bg-surface-2').trim(), border: getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim() },
+                hover: { background: getComputedStyle(document.documentElement).getPropertyValue('--bg-surface-2').trim(), border: getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan').trim() }
             },
-            font: {
-                color: '#ffffff',
-                face: 'Inter, sans-serif',
-                size: 14,
-                multi: true
-            },
-            borderWidth: 2,
-            borderWidthSelected: 4,
-            shadow: {
-                enabled: true,
-                color: c.border.replace('rgb', 'rgba').replace(')', ', 0.3)'),
-                size: 20,
-                x: 0,
-                y: 0
-            },
+            shadow: { color: c.shadow },
+            _orig_border: c.border,
             // Metadata for detail panel
             ...n
         };
     }));
 
-    const edges = new vis.DataSet(edgesData.map(e => ({
-        ...e,
-        color: { color: 'rgba(255, 255, 255, 0.4)', highlight: '#00f5ff' },
-        width: 2,
-        hoverWidth: 3,
-        selectionWidth: 4,
-        arrows: { to: { enabled: true, scaleFactor: 0.7 } },
-        smooth: { type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.6 }
-    })));
+    const edges = new vis.DataSet(edgesData);
 
     const data = { nodes, edges };
-    const options = {
-        layout: {
-            hierarchical: {
-                enabled: true,
-                direction: 'UD',
-                sortMethod: 'directed',
-                nodeSpacing: 250,
-                levelSeparation: 150,
-                treeSpacing: 200,
-                blockShifting: true,
-                edgeMinimization: true,
-                parentCentralization: true,
-            }
-        },
-        physics: false,
-        interaction: {
-            hover: true,
-            tooltipDelay: 200,
-            zoomView: true,
-            dragView: true
-        }
-    };
+    const options = getGraphOptions();
 
     network = new vis.Network(container, data, options);
     window.network = network;
@@ -114,12 +137,7 @@ function initGraph(containerId, nodesData, edgesData) {
     
     // Fit View after stabilisation
     network.once("afterDrawing", function() {
-        network.fit({
-            animation: {
-                duration: 1000,
-                easingFunction: "easeInOutQuad"
-            }
-        });
+        if(window.fitGraphView) window.fitGraphView();
     });
 }
 
@@ -131,9 +149,7 @@ function loadGraph(silent = false) {
 
     fetch('/api/graph')
         .then(response => {
-            if (!response.ok) {
-                 return response.json().then(json => { throw new Error(json.error || `HTTP ${response.status}`); });
-            }
+            if (!response.ok) return response.json().then(j => { throw new Error(j.error || "HTTP Error"); });
             return response.json();
         })
         .then(data => {
@@ -144,7 +160,7 @@ function loadGraph(silent = false) {
         .catch(err => {
             console.error("Error loading graph:", err);
             const loader = document.getElementById('loader-overlay');
-            if(loader) loader.innerHTML = `<p style="color:var(--danger-color)">Error connecting to backend.</p>`;
+            if(loader) loader.innerHTML = `<p style="color:var(--accent-red)">Error connected to backend: ${err.message}</p>`;
         });
 }
 
@@ -169,9 +185,7 @@ window.exportGraph = function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
-    if(window.showToast) window.showToast("Graph exported as PNG", "success");
-};
+}
 
 window.highlightNode = function(nodeId) {
     if(!network) return;
@@ -180,6 +194,96 @@ window.highlightNode = function(nodeId) {
         scale: 1.2,
         animation: { duration: 500, easingFunction: "easeOutCubic" }
     });
+};
+
+window.traceNodePath = function(nodeId) {
+    if(!network || !network.body.data.nodes) return;
+    
+    const btn = document.querySelector('.detail-body .btn-primary');
+    if (btn && btn.innerText === "Reset Trace") {
+        if(window.resetTrace) window.resetTrace();
+        return;
+    }
+    
+    let connectedNodes = new Set();
+    connectedNodes.add(nodeId);
+    
+    function getUp(id) {
+        const edges = network.getConnectedEdges(id);
+        edges.forEach(eId => {
+            const edge = network.body.data.edges.get(eId);
+            if(edge && edge.to === id && !connectedNodes.has(edge.from)) {
+                connectedNodes.add(edge.from);
+                getUp(edge.from);
+            }
+        });
+    }
+    
+    function getDown(id) {
+        const edges = network.getConnectedEdges(id);
+        edges.forEach(eId => {
+            const edge = network.body.data.edges.get(eId);
+            if(edge && edge.from === id && !connectedNodes.has(edge.to)) {
+                connectedNodes.add(edge.to);
+                getDown(edge.to);
+            }
+        });
+    }
+    
+    getUp(nodeId);
+    getDown(nodeId);
+    
+    const allNs = network.body.data.nodes.get();
+    const style = getComputedStyle(document.documentElement);
+    const get = (v) => style.getPropertyValue(v).trim();
+    
+    const updatesN = allNs.map(n => ({
+        id: n.id,
+        color: connectedNodes.has(n.id) 
+            ? { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--bg-surface-2'), border: get('--accent-cyan') }, hover: { background: get('--bg-surface-2'), border: get('--accent-cyan') } } 
+            : { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)', highlight: { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)' }, hover: { background: get('--bg-app'), border: 'rgba(50,50,50,0.4)' } },
+        font: connectedNodes.has(n.id) ? { color: get('--node-text') } : { color: 'rgba(100,100,100,0.4)' }
+    }));
+    network.body.data.nodes.update(updatesN);
+    
+    const allEs = network.body.data.edges.get();
+    const updatesE = allEs.map(e => ({
+        id: e.id,
+        color: (connectedNodes.has(e.from) && connectedNodes.has(e.to)) ? null : { color: 'rgba(50,50,50,0.1)' }
+    }));
+    network.body.data.edges.update(updatesE);
+    
+    network.fit({
+        nodes: Array.from(connectedNodes),
+        animation: { duration: 800, easingFunction: "easeInOutQuad" }
+    });
+
+    if (btn) btn.innerText = "Reset Trace";
+    if(window.showToast) window.showToast(`Full recursive trace isolated`, 'success');
+};
+
+window.resetTrace = function() {
+    if(!network || !network.body.data.nodes) return;
+    
+    const allNs = network.body.data.nodes.get();
+    const style = getComputedStyle(document.documentElement);
+    const get = (v) => style.getPropertyValue(v).trim();
+    
+    const updatesN = allNs.map(n => ({
+        id: n.id,
+        color: { background: get('--node-bg'), border: n._orig_border, highlight: { background: get('--bg-surface-2'), border: get('--accent-cyan') }, hover: { background: get('--bg-surface-2'), border: get('--accent-cyan') } },
+        font: { color: get('--node-text') }
+    }));
+    network.body.data.nodes.update(updatesN);
+    
+    const allEs = network.body.data.edges.get();
+    const updatesE = allEs.map(e => ({ id: e.id, color: null }));
+    network.body.data.edges.update(updatesE);
+    
+    const btn = document.querySelector('.detail-body .btn-primary');
+    if (btn) btn.innerText = "Trace Path";
+    
+    network.fit({ animation: { duration: 800, easingFunction: "easeInOutQuad" } });
 };
 
 document.addEventListener("DOMContentLoaded", () => {

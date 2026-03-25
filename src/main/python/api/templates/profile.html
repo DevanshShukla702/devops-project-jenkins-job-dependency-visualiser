@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — FlowTrace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-page" style="flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+    
+    <div class="auth-panel-form" style="width: 100%; max-width: 500px; border-left: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-radius: var(--radius-lg); border: 1px solid var(--border);">
+        <div class="auth-box gs-reveal">
+            <h2 style="margin-bottom: 4px;">Account Profile</h2>
+            <p style="color: var(--text-muted); margin-bottom: var(--space-xl); font-size: 13px;">View and manage your FlowTrace credentials.</p>
+            
+            <div class="flash-messages">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="flash-msg {{ category }}" style="margin-bottom:1rem; font-size:12px;">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+            </div>
+            
+            <form action="{{ url_for('profile_page') }}" method="POST" id="profile-form">
+                <div class="form-group">
+                    <label>Username <span style="font-size:10px; color:var(--text-muted)">(Identity Immutable)</span></label>
+                    <input type="text" class="form-control mono" value="{{ user.username }}" disabled style="opacity: 0.8; cursor: not-allowed; font-size:13px; color: var(--text-secondary)">
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-control" value="{{ user.name }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                </div>
+                
+                <div class="form-group" style="margin-top: var(--space-xl);">
+                    <label for="password">Change Password <span style="font-size:10px; color:var(--text-muted)">(Leave blank to keep unchanged)</span></label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" autocomplete="new-password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top: var(--space-lg);">
+                    <span class="btn-text">Update Profile</span>
+                </button>
+            </form>
+            
+            <div class="auth-footer" style="margin-top: var(--space-xl);">
+                <p><a href="{{ url_for('dashboard') }}">← Back to Dashboard</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

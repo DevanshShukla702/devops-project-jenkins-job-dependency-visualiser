@@ -1,8 +1,4 @@
-let statsRefreshInterval = null;
-let graphRefreshInterval = null;
-let autoRefreshEnabled = false;
-
-// Format duration utility
+// Utilities
 function formatDuration(ms) {
     if(!ms) return '-';
     let s = Math.floor(ms / 1000);
@@ -11,18 +7,42 @@ function formatDuration(ms) {
     return `${m}m ${s}s`;
 }
 
-// Stats loading
+function countUp(el, target, isPercentage = false, duration = 800) {
+    const start = performance.now();
+    const update = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        const val = Math.round(ease * target);
+        el.textContent = val + (isPercentage ? '%' : '');
+        if (t < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+}
+
+// Stats logic
 async function loadStats() {
     try {
         const res = await fetch('/api/stats');
         const data = await res.json();
         
-        document.getElementById('stat-total').innerText = data.total_jobs;
-        
-        // Handle no jobs division by zero case
+        // Hide skeletons, show metrics
+        ['total', 'success-rate', 'failed', 'refreshed'].forEach(id => {
+            const skel = document.getElementById(`stat-${id}-skeleton`);
+            if (skel) skel.style.display = 'none';
+        });
+
+        const elTotal = document.getElementById('stat-total');
+        elTotal.style.display = 'inline';
+        countUp(elTotal, data.total_jobs);
+
         const rate = data.total_jobs > 0 ? Math.round((data.success_count / data.total_jobs) * 100) : 0;
-        document.getElementById('stat-success-rate').innerText = `${rate}%`;
-        document.getElementById('stat-failed').innerText = data.failed_count;
+        const elRate = document.getElementById('stat-success-rate');
+        elRate.style.display = 'inline';
+        countUp(elRate, rate, true);
+
+        const elFailed = document.getElementById('stat-failed');
+        elFailed.style.display = 'inline';
+        countUp(elFailed, data.failed_count);
         
         updateLastRefreshed();
     } catch(err) {
@@ -30,13 +50,12 @@ async function loadStats() {
     }
 }
 
-// Side-bar specific Jobs loading
+// Sidebar jobs logic
 async function loadSidebarJobs() {
     try {
         const res = await fetch('/api/jobs');
         const jobs = await res.json();
         
-        // Store globally for filtering
         window.allJobsData = jobs;
         renderSidebarJobs();
     } catch(err) {
@@ -53,7 +72,7 @@ function renderSidebarJobs(filter = 'all', searchQuery = '') {
     const query = searchQuery.toLowerCase();
     
     window.allJobsData.forEach(job => {
-        let status = job.color.replace('_anime','').replace('anime','').replace('blue', 'success').replace('red', 'failed').replace('yellow', 'unstable');
+        let status = job.color ? job.color.replace('_anime','').replace('anime','').replace('blue', 'success').replace('red', 'failed').replace('yellow', 'unstable') : 'notbuilt';
         if(!['success','failed','unstable'].includes(status)) status = 'notbuilt';
 
         if(filter !== 'all' && status !== filter) return;
@@ -62,19 +81,22 @@ function renderSidebarJobs(filter = 'all', searchQuery = '') {
         const div = document.createElement('div');
         div.className = 'job-item';
         div.onclick = () => {
+            // Unselect others
+            document.querySelectorAll('.job-item').forEach(el => el.classList.remove('active'));
+            div.classList.add('active');
             if(window.highlightNode) window.highlightNode(job.name);
             openDetailPanel(job.name);
         };
         
         div.innerHTML = `
             <div class="job-dot ${status}"></div>
-            <div class="mono" style="font-size: 0.9rem">${job.name}</div>
+            <div class="job-name">${job.name}</div>
+            <div class="job-build">${job.lastBuild ? '#' + job.lastBuild.number : '-'}</div>
         `;
         list.appendChild(div);
     });
 }
 
-// Detail panel logic
 function openDetailPanel(nodeId) {
     const panel = document.getElementById('detail-panel');
     panel.classList.add('open');
@@ -83,11 +105,11 @@ function openDetailPanel(nodeId) {
     const nodeData = window.allGraphNodes.find(n => n.id === nodeId);
     if(!nodeData) return;
     
-    document.getElementById('dp-title').innerText = nodeData.label;
+    document.getElementById('dp-title').innerText = nodeData.label.split('\n')[0];
     
     const dpStatus = document.getElementById('dp-status');
-    dpStatus.className = `status-pill status-${nodeData.status}`;
-    dpStatus.innerText = nodeData.status;
+    dpStatus.className = `status-pill status-${nodeData.status.toLowerCase()}`;
+    dpStatus.innerText = nodeData.status.toUpperCase();
 
     document.getElementById('dp-build').innerText = nodeData.build_number ? `#${nodeData.build_number}` : '-';
     document.getElementById('dp-duration').innerText = nodeData.duration || '-';
@@ -101,13 +123,14 @@ function openDetailPanel(nodeId) {
 function closeDetailPanel() {
     document.getElementById('detail-panel').classList.remove('open');
     if(window.network) window.network.unselectAll();
+    document.querySelectorAll('.job-item').forEach(el => el.classList.remove('active'));
 }
 
 function tracePath() {
     const nodeId = document.getElementById('dp-title').innerText;
     if(window.traceNodePath) {
         window.traceNodePath(nodeId);
-        showToast(`Tracing path for ${nodeId}`, 'success');
+        if(window.showToast) window.showToast(`Tracing path for ${nodeId}`, 'success');
     }
 }
 
@@ -116,15 +139,23 @@ function openJenkins() {
     window.open(`http://localhost:8080/job/${encodeURIComponent(nodeId)}`, '_blank');
 }
 
-// Auto refresh
+function updateLastRefreshed() {
+    const d = new Date();
+    const timeStr = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+    document.getElementById('stat-last-refreshed').innerHTML = timeStr;
+}
+
+let autoRefreshEnabled = false;
+let graphRefreshInterval = null;
+
 function toggleAutoRefresh() {
     autoRefreshEnabled = !autoRefreshEnabled;
     const btn = document.getElementById('auto-refresh-btn');
     if(autoRefreshEnabled) {
-        btn.style.background = 'var(--accent-color)';
-        btn.style.color = 'var(--bg-color)';
+        btn.style.background = 'var(--accent-cyan)';
+        btn.style.color = 'var(--bg-app)';
         btn.innerText = '⏱ (On)';
-        showToast("Auto-refresh enabled (30s)", "success");
+        if(window.showToast) window.showToast("Auto-refresh enabled (30s)", "success");
         // Start timers
         graphRefreshInterval = setInterval(() => {
             if(window.refreshGraph) window.refreshGraph(true); // silent refresh
@@ -133,22 +164,22 @@ function toggleAutoRefresh() {
         btn.style.background = '';
         btn.style.color = '';
         btn.innerText = '⏱';
-        showToast("Auto-refresh disabled", "success");
+        if(window.showToast) window.showToast("Auto-refresh disabled", "success");
         clearInterval(graphRefreshInterval);
     }
 }
 
-function updateLastRefreshed() {
-    const d = new Date();
-    document.getElementById('stat-last-refreshed').innerText = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
-}
-
-// Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+    // Initial fetch
     loadStats();
     loadSidebarJobs();
     
-    // Filters
+    const autoRefreshBtn = document.getElementById('auto-refresh-btn');
+    if (autoRefreshBtn) {
+        autoRefreshBtn.addEventListener('click', toggleAutoRefresh);
+    }
+    
+    // Filters logic
     let currentFilter = 'all';
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -159,22 +190,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
     
-    // Search
-    document.getElementById('job-search').addEventListener('input', (e) => {
-        renderSidebarJobs(currentFilter, e.target.value);
-    });
-
-    // Auto-refresh btn
-    document.getElementById('auto-refresh-btn').addEventListener('click', toggleAutoRefresh);
+    // Search logic
+    const searchInput = document.getElementById('job-search');
+    if(searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            renderSidebarJobs(currentFilter, e.target.value);
+        });
+    }
     
-    // Initial highlight logic for redirects from /jobs (e.g., ?highlight=...)
+    // Pre-highlight logic
     const urlParams = new URLSearchParams(window.location.search);
     const highlightTarget = urlParams.get('highlight');
     if(highlightTarget) {
-        // give graph time to render
         setTimeout(() => {
             if(window.highlightNode) window.highlightNode(highlightTarget);
             openDetailPanel(highlightTarget);
-        }, 1000);
+        }, 1500);
     }
 });

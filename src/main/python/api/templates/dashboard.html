@@ -7,50 +7,61 @@
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-layout gs-fade-in">
+<div class="dashboard-layout">
     <!-- Overlay Loader -->
     <div id="loader-overlay">
-        <div class="page-loader">
-            <div class="loader-spinner"></div>
-            <p>Tracing pipeline dependencies...</p>
+        <div style="text-align:center;">
+            <div class="skeleton" style="width:120px;height:40px;margin:0 auto 1rem;"></div>
+            <p style="color:var(--text-secondary);font-size:13px;">Tracing pipeline dependencies...</p>
         </div>
     </div>
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <input type="text" id="job-search" class="search-box" placeholder="Search jobs (press /)">
-            <div class="filter-controls" id="filter-controls">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="success">Success</button>
-                <button class="filter-btn" data-filter="failed">Failed</button>
-                <button class="filter-btn" data-filter="unstable">Unstable</button>
-                <button class="filter-btn" data-filter="notbuilt">Not Built</button>
-            </div>
+        <input type="text" id="job-search" class="search-box" placeholder="Search jobs...">
+        
+        <div class="filter-controls" id="filter-controls">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="success">Success</button>
+            <button class="filter-btn" data-filter="failed">Failed</button>
+            <button class="filter-btn" data-filter="unstable">Unstable</button>
+            <button class="filter-btn" data-filter="notbuilt">Not Built</button>
         </div>
+        
         <div class="jobs-list" id="jobs-list">
             <!-- Populated via JS -->
+        </div>
+
+        <!-- Legend -->
+        <div class="legend-panel">
+            <div class="legend-title">Legend</div>
+            <div class="legend-item"><div class="job-dot success"></div> <span>Success</span></div>
+            <div class="legend-item"><div class="job-dot failed"></div> <span>Failed</span></div>
+            <div class="legend-item"><div class="job-dot unstable"></div> <span>Unstable</span></div>
+            <div class="legend-item"><div class="job-dot notbuilt"></div> <span>Not Built</span></div>
         </div>
     </aside>
 
     <!-- Main Graph Area -->
     <main class="graph-area">
         <div class="metrics-bar">
-            <div class="metric-card">
-                <h4>Total Jobs</h4>
-                <div class="metric-value gs-counter" id="stat-total">0</div>
+            <div class="metric-card" data-metric="total">
+                <h4>Total jobs</h4>
+                <div class="metric-value"><div class="skeleton" id="stat-total-skeleton"></div><span id="stat-total" style="display:none;">0</span></div>
             </div>
-            <div class="metric-card">
-                <h4>Success Rate</h4>
-                <div class="metric-value gs-counter" id="stat-success-rate">0%</div>
+            <div class="metric-card" data-metric="success">
+                <h4>Success rate</h4>
+                <div class="metric-value"><div class="skeleton" id="stat-success-rate-skeleton"></div><span id="stat-success-rate" style="display:none;">0%</span></div>
             </div>
-            <div class="metric-card">
-                <h4>Failed</h4>
-                <div class="metric-value gs-counter" style="color: var(--danger-color)" id="stat-failed">0</div>
+            <div class="metric-card" data-metric="failed">
+                <h4>Failed jobs</h4>
+                <div class="metric-value"><div class="skeleton" id="stat-failed-skeleton"></div><span id="stat-failed" style="display:none;">0</span></div>
             </div>
-            <div class="metric-card">
-                <h4>Last Refreshed</h4>
-                <div class="metric-value" style="font-size:1rem; padding-top:0.4rem;" id="stat-last-refreshed">-</div>
+            <div class="metric-card" data-metric="refresh">
+                <h4>Last refreshed</h4>
+                <div class="metric-value" style="font-size: 14px; display:flex; align-items:center; height:28px;" id="stat-last-refreshed">
+                    <div class="skeleton" id="stat-refreshed-skeleton" style="width:80px;height:14px;"></div>
+                </div>
             </div>
         </div>
 
@@ -58,18 +69,11 @@
 
         <!-- Float Controls -->
         <div class="graph-controls">
-            <button class="graph-btn" title="Refresh (R)" onclick="refreshGraph()">↻</button>
-            <button class="graph-btn" title="Fit View (F)" onclick="fitGraphView()">[ ]</button>
-            <button class="graph-btn" title="Export PNG" onclick="exportGraph()">⬇</button>
-            <button class="graph-btn" title="Toggle Auto-Refresh" id="auto-refresh-btn">⏱</button>
-        </div>
-
-        <!-- Legend -->
-        <div class="legend-panel">
-            <div class="legend-item"><div class="job-dot success"></div> Success</div>
-            <div class="legend-item"><div class="job-dot failed"></div> Failed</div>
-            <div class="legend-item"><div class="job-dot unstable"></div> Unstable</div>
-            <div class="legend-item"><div class="job-dot notbuilt"></div> Not Built</div>
+            <button class="graph-btn" id="auto-refresh-btn" data-tooltip="Auto-Refresh (30s)">⏱</button>
+            <button class="graph-btn" data-tooltip="Refresh graph" onclick="refreshGraph()">↺</button>
+            <button class="graph-btn" data-tooltip="Fit all nodes" onclick="fitGraphView()">⤢</button>
+            <button class="graph-btn" data-tooltip="Reset layout" onclick="resetLayout()">❖</button>
+            <button class="graph-btn" data-tooltip="Fullscreen" onclick="toggleFullscreen()">⛶</button>
         </div>
     </main>
 
@@ -100,9 +104,9 @@
                 <div class="detail-value" id="dp-downstream">-</div>
             </div>
             
-            <div style="margin-top: 2rem;">
-                <button class="btn btn-primary btn-block" onclick="tracePath()">Trace Path</button>
-                <button class="btn btn-outline btn-block" style="margin-top: 1rem;" onclick="openJenkins()">Open in Jenkins ↗</button>
+            <div style="margin-top: 2rem; display:flex; flex-direction:column; gap:var(--space-md);">
+                <button class="btn btn-primary" style="width:100%" onclick="tracePath()">Trace Path</button>
+                <button class="btn btn-outline" style="width:100%" onclick="openJenkins()">Open in Jenkins ↗</button>
             </div>
         </div>
     </aside>
@@ -112,4 +116,25 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/graph.js') }}"></script>
+<script>
+    // Fullscreen generic toggle
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    }
+    // Deep structural reset for the dashboard layout
+    function resetLayout() {
+        if (window.network) {
+            window.network.unselectAll();
+            if(window.resetTrace) window.resetTrace();
+            if(window.closeDetailPanel) window.closeDetailPanel();
+            if(window.showToast) window.showToast("Local dashboard selections reset.", "success");
+        }
+    }
+</script>
 {% endblock %}

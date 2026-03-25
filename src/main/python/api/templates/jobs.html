@@ -55,27 +55,29 @@
 
     function renderTable(data) {
         const tbody = document.getElementById('jobs-tbody');
-        tbody.innerHTML = '';
-        data.forEach(job => {
+        tbody.innerHTML = ''; // Clear existing content
+        
+        data.forEach((job, i) => {
             const tr = document.createElement('tr');
-            tr.className = 'gs-fade-in';
+            
+            // Apply staggered fadeUp animation defined in base.css
+            tr.style.animation = `fadeUp 0.25s ease ${i * 0.03}s both`;
             
             // Format status
-            let statusClass = `status-${job.color.replace('_anime', '').replace('anime', '').replace('blue', 'success').replace('red', 'failed').replace('yellow', 'unstable')}`;
-            if(!statusClass.includes('success') && !statusClass.includes('failed') && !statusClass.includes('unstable')) {
-                statusClass = 'status-notbuilt';
-            }
-            const statusLabel = statusClass.split('-')[1];
+            let statusClass = job.color.replace('_anime', '').replace('anime', '').replace('blue', 'success').replace('red', 'failed').replace('yellow', 'unstable');
+            if(!['success', 'failed', 'unstable'].includes(statusClass)) statusClass = 'not_built';
+            
+            const statusLabel = statusClass.replace('_', ' ');
 
             tr.innerHTML = `
-                <td class="mono">${job.name}</td>
-                <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
-                <td class="mono">#${job.build_number || '-'}</td>
-                <td class="mono">${formatDuration(job.duration)}</td>
-                <td class="mono">${job.upstream.length}</td>
-                <td class="mono">${job.downstream.length}</td>
+                <td class="job-name-cell">${job.name}</td>
+                <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                <td class="build-num-cell">#${job.build_number || '-'}</td>
+                <td class="duration-cell">${formatDuration(job.duration)}</td>
+                <td class="num-cell">${job.upstream.length}</td>
+                <td class="num-cell">${job.downstream.length}</td>
                 <td>
-                    <button class="action-btn" onclick="window.location.href='/dashboard?highlight=${job.name}'">View Graph</button>
+                    <button class="btn-view-graph" onclick="window.location.href='/dashboard?highlight=${job.name}'">View Graph</button>
                 </td>
             `;
             tbody.appendChild(tr);

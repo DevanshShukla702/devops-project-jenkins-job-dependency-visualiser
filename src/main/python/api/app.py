@@ -112,6 +112,26 @@ def jobs_page():
 def about():
     return render_template("about.html")
 
+@app.route("/profile", methods=["GET", "POST"])
+@login_required if AUTH_ENABLED else lambda x: x
+def profile_page():
+    if request.method == "POST":
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        
+        from werkzeug.security import generate_password_hash
+        pwd_hash = generate_password_hash(password) if password else None
+        
+        if User.update(current_user.id, name, email, pwd_hash):
+            current_user.name = name
+            current_user.email = email
+            flash("Profile updated successfully", "success")
+        else:
+            flash("Error updating profile. Email might be in use.", "error")
+            
+    return render_template("profile.html", user=current_user)
+
 @app.route("/jenkins-guide")
 def guide():
     return render_template("guide.html")
