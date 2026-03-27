@@ -1,90 +1,98 @@
+from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-import sqlite3
-import os
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.exc import OperationalError, IntegrityError
+from datetime import datetime
+import time
 
-DB_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "flowtrace.db")
-)
+db = SQLAlchemy()
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            username TEXT NOT NULL UNIQUE,
-            password_hash TEXT NOT NULL
-        )
-    ''')
-    conn.commit()
-    conn.close()
 
-init_db()
+class User(UserMixin, db.Model):
+    """User model for FlowTrace authentication (Supabase PostgreSQL)."""
+    __tablename__ = "users"
 
-class User(UserMixin):
-    def __init__(self, id, name, email, username):
-        self.id = str(id)
-        self.name = name
-        self.email = email
-        self.username = username
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    # ----------------------------------------------------------
+    # Static methods preserve the same API that app.py calls,
+    # so ALL existing routes work without any changes.
+    # ----------------------------------------------------------
 
     @staticmethod
     def get(user_id):
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('SELECT id, name, email, username FROM users WHERE id = ?', (user_id,))
-        row = c.fetchone()
-        conn.close()
-        if row:
-            return User(id=row[0], name=row[1], email=row[2], username=row[3])
-        return None
+        """Get user by ID -- used by Flask-Login user_loader."""
+        def _query():
+            return db.session.get(User, int(user_id))
+        return _query_with_retry(_query)
 
     @staticmethod
     def find_by_username(username):
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('SELECT id, name, email, username, password_hash FROM users WHERE username = ?', (username,))
-        row = c.fetchone()
-        conn.close()
-        if row:
-            user = User(id=row[0], name=row[1], email=row[2], username=row[3])
-            user.password_hash = row[4]
-            return user
-        return None
+        """Find user by username."""
+        def _query():
+            return User.query.filter_by(username=username).first()
+        return _query_with_retry(_query)
 
     @staticmethod
     def create(name, email, username, password):
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        password_hash = generate_password_hash(password)
+        """Create a new user. Returns True on success, False if duplicate."""
         try:
-            c.execute('INSERT INTO users (name, email, username, password_hash) VALUES (?, ?, ?, ?)',
-                      (name, email, username, password_hash))
-            conn.commit()
-            success = True
-        except sqlite3.IntegrityError:
-            success = False
-        conn.close()
-        return success
+            user = User(name=name, email=email, username=username)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            return True
+        except IntegrityError:
+            db.session.rollback()
+            return False
+        except OperationalError:
+            db.session.rollback()
+            return False
 
     @staticmethod
     def update(user_id, name, email, new_password_hash=None):
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
+        """Update user profile. Returns True on success."""
         try:
-            if new_password_hash:
-                c.execute('UPDATE users SET name=?, email=?, password_hash=? WHERE id=?', (name, email, new_password_hash, user_id))
-            else:
-                c.execute('UPDATE users SET name=?, email=? WHERE id=?', (name, email, user_id))
-            conn.commit()
-            success = True
-        except sqlite3.IntegrityError:
-            success = False
-        conn.close()
-        return success
+            user = db.session.get(User, int(user_id))
+            if user:
+                user.name = name
+                user.email = email
+                if new_password_hash:
+                    user.password_hash = new_password_hash
+                db.session.commit()
+                return True
+            return False
+        except IntegrityError:
+            db.session.rollback()
+            return False
+        except OperationalError:
+            db.session.rollback()
+            return False
 
-    def check_password(self, password):
-        return check_password_hash(getattr(self, 'password_hash', ''), password)
+    def __repr__(self):
+        return f"<User {self.username}>"
+
+
+def _query_with_retry(query_fn, retries=2):
+    """Retry database queries to handle Supabase cold starts gracefully."""
+    for attempt in range(retries):
+        try:
+            return query_fn()
+        except OperationalError:
+            if attempt < retries - 1:
+                time.sleep(2)
+                db.session.rollback()
+            else:
+                raise

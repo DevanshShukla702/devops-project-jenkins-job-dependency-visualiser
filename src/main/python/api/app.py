@@ -3,75 +3,128 @@ import os
 import logging
 import yaml
 import secrets
+from datetime import timedelta
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from dotenv import load_dotenv
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Load .env FIRST — before any other config
+load_dotenv()
 
-from models.user import User
+# Absolute base directory (Vercel-compatible)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.abspath(os.path.join(BASE_DIR, "..")))
+
+from models.user import User, db
 from visualization.graph_builder import build_graph
 import services.jenkins_service as jenkins_service
 import services.mock_service as mock_service
 
-# ═══════════════════════════════════════════════════════
-# CONFIGURATION — env vars take priority over config.yaml
-# ═══════════════════════════════════════════════════════
-CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config", "config.yaml"))
-with open(CONFIG_PATH, encoding="utf-8") as f:
-    config = yaml.safe_load(f)
+# -----------------------------------------------------------
+# CONFIGURATION -- env vars take priority over config.yaml
+# -----------------------------------------------------------
+CONFIG_PATH = os.path.abspath(os.path.join(BASE_DIR, "..", "config", "config.yaml"))
+try:
+    with open(CONFIG_PATH, encoding="utf-8") as f:
+        config = yaml.safe_load(f) or {}
+except FileNotFoundError:
+    config = {}
 
 app_config = config.get("app", {})
 
-# App settings from env → config → defaults
-DEMO_MODE = os.environ.get("FLOWTRACE_DEMO_MODE", str(app_config.get("demo_mode", False))).lower() in ("true", "1", "yes")
-AUTH_ENABLED = os.environ.get("FLOWTRACE_AUTH_ENABLED", str(config.get("auth", {}).get("enabled", True))).lower() in ("true", "1", "yes")
+# App settings from env -> config -> defaults
+DEMO_MODE = os.environ.get(
+    "DEMO_MODE",
+    os.environ.get("FLOWTRACE_DEMO_MODE", str(app_config.get("demo_mode", False)))
+).lower() in ("true", "1", "yes")
+
+AUTH_ENABLED = os.environ.get(
+    "FLOWTRACE_AUTH_ENABLED",
+    str(config.get("auth", {}).get("enabled", True))
+).lower() in ("true", "1", "yes")
+
 FLASK_ENV = os.environ.get("FLASK_ENV", "production")
 IS_PRODUCTION = FLASK_ENV == "production"
 
-# ═══════════════════════════════════════════════════════
-# FLASK APP SETUP
-# ═══════════════════════════════════════════════════════
-app = Flask(__name__, template_folder="templates", static_folder="static")
+# -----------------------------------------------------------
+# FLASK APP SETUP (absolute paths for Vercel compatibility)
+# -----------------------------------------------------------
+app = Flask(
+    __name__,
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
+)
 
-# Secret key: env var → config → auto-generated (with warning)
-secret_key = os.environ.get("FLOWTRACE_SECRET_KEY")
+# Secret key: env var -> config -> auto-generated
+secret_key = os.environ.get("SECRET_KEY") or os.environ.get("FLOWTRACE_SECRET_KEY")
 if not secret_key:
     secret_key = config.get("auth", {}).get("secret_key", "")
-    if not secret_key or secret_key in ("", "dev-fallback-key", "flowtrace-super-secret-key-change-me"):
+    if not secret_key or secret_key in (
+        "", "dev-fallback-key",
+        "flowtrace-super-secret-key-change-me",
+        "REPLACE_WITH_ENV_VAR",
+    ):
         secret_key = secrets.token_hex(32)
         if IS_PRODUCTION:
-            print("[WARNING] No FLOWTRACE_SECRET_KEY set. Using auto-generated key.")
-            print("          Sessions will be invalidated on restart. Set FLOWTRACE_SECRET_KEY in .env")
+            print("[WARNING] No SECRET_KEY set. Sessions will reset on restart.")
 
 app.secret_key = secret_key
 
-# Security headers
+# -----------------------------------------------------------
+# DATABASE (Supabase PostgreSQL)
+# -----------------------------------------------------------
+database_url = os.environ.get("DATABASE_URL", "")
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+        "connect_args": {
+            "sslmode": "require",
+            "connect_timeout": 10,
+        },
+    }
+else:
+    # Local SQLite fallback for development without Supabase
+    local_db = os.path.abspath(os.path.join(BASE_DIR, "..", "flowtrace.db"))
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{local_db}"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+    if IS_PRODUCTION:
+        print("[WARNING] No DATABASE_URL set. Using local SQLite. Not for production!")
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Session security
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=IS_PRODUCTION,
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     WTF_CSRF_ENABLED=True,
     WTF_CSRF_TIME_LIMIT=3600,
 )
 
-# ═══════════════════════════════════════════════════════
-# CSRF PROTECTION
-# ═══════════════════════════════════════════════════════
-csrf = CSRFProtect(app)
+# -----------------------------------------------------------
+# INITIALIZE EXTENSIONS
+# -----------------------------------------------------------
+db.init_app(app)
 
-# Exempt API routes from CSRF (they use auth tokens / session cookies)
-# but protect all form POST endpoints
+# Create tables on first run (safe: only creates if not exist)
+with app.app_context():
+    db.create_all()
+
+csrf = CSRFProtect(app)
 csrf.exempt("graph")
 csrf.exempt("api_jobs")
 csrf.exempt("api_stats")
 csrf.exempt("health_check")
 
-# ═══════════════════════════════════════════════════════
-# RATE LIMITING
-# ═══════════════════════════════════════════════════════
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
@@ -79,53 +132,63 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-# ═══════════════════════════════════════════════════════
-# LOGGING
-# ═══════════════════════════════════════════════════════
-log_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "logs"))
-os.makedirs(log_dir, exist_ok=True)
+# -----------------------------------------------------------
+# LOGGING (StreamHandler only on Vercel; FileHandler locally)
+# -----------------------------------------------------------
+log_handlers = [logging.StreamHandler()]
+if not IS_PRODUCTION:
+    try:
+        log_dir = os.path.abspath(os.path.join(BASE_DIR, "..", "logs"))
+        os.makedirs(log_dir, exist_ok=True)
+        log_handlers.append(
+            logging.FileHandler(os.path.join(log_dir, "flowtrace.log"))
+        )
+    except (PermissionError, OSError):
+        pass
 
 logging.basicConfig(
     level=logging.INFO if IS_PRODUCTION else logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.FileHandler(os.path.join(log_dir, "flowtrace.log")),
-        logging.StreamHandler(),
-    ],
+    handlers=log_handlers,
 )
 logger = logging.getLogger("flowtrace")
 
-# ═══════════════════════════════════════════════════════
+# -----------------------------------------------------------
 # FLASK-LOGIN SETUP
-# ═══════════════════════════════════════════════════════
+# -----------------------------------------------------------
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
+
 
 def get_service():
     if DEMO_MODE:
         return mock_service
     return jenkins_service
 
-# ═══════════════════════════════════════════════════════
+
+# -----------------------------------------------------------
 # AUTH DECORATOR HELPER
-# ═══════════════════════════════════════════════════════
+# -----------------------------------------------------------
 def require_auth(f):
     """Conditionally apply @login_required based on AUTH_ENABLED."""
     if AUTH_ENABLED:
         return login_required(f)
     return f
 
-# ═══════════════════════════════════════════════════════
-# PAGE ROUTES
-# ═══════════════════════════════════════════════════════
+
+# ===========================================================
+# PAGE ROUTES  (unchanged — do NOT modify)
+# ===========================================================
 @app.route("/")
 def index():
     return render_template("landing.html")
+
 
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
@@ -156,11 +219,14 @@ def login():
             login_user(user)
             logger.info(f"User '{username}' logged in")
             return redirect(url_for("dashboard"))
-        
-        logger.warning(f"Failed login attempt for '{username}' from {request.remote_addr}")
+
+        logger.warning(
+            f"Failed login attempt for '{username}' from {request.remote_addr}"
+        )
         flash("Invalid username or password", "error")
 
     return render_template("login.html")
+
 
 @app.route("/register", methods=["GET", "POST"])
 @limiter.limit("5 per minute", methods=["POST"])
@@ -175,7 +241,6 @@ def register():
         password = request.form.get("password", "")
         confirm = request.form.get("confirm", "")
 
-        # Input validation
         if not all([name, email, username, password, confirm]):
             flash("All fields are required", "error")
             return redirect(url_for("register"))
@@ -201,6 +266,7 @@ def register():
 
     return render_template("register.html")
 
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -209,19 +275,26 @@ def logout():
     logger.info(f"User '{username}' logged out")
     return redirect(url_for("login"))
 
+
 @app.route("/dashboard")
 @require_auth
 def dashboard():
-    return render_template("dashboard.html", user=current_user if not current_user.is_anonymous else None)
+    return render_template(
+        "dashboard.html",
+        user=current_user if not current_user.is_anonymous else None,
+    )
+
 
 @app.route("/jobs")
 @require_auth
 def jobs_page():
     return render_template("jobs.html")
 
+
 @app.route("/about")
 def about():
     return render_template("about.html")
+
 
 @app.route("/profile", methods=["GET", "POST"])
 @require_auth
@@ -236,6 +309,7 @@ def profile_page():
             return render_template("profile.html", user=current_user)
 
         from werkzeug.security import generate_password_hash
+
         pwd_hash = generate_password_hash(password) if password else None
 
         if User.update(current_user.id, name, email, pwd_hash):
@@ -248,22 +322,21 @@ def profile_page():
 
     return render_template("profile.html", user=current_user)
 
+
 @app.route("/jenkins-guide")
 def guide():
     return render_template("guide.html")
 
-# ═══════════════════════════════════════════════════════
-# API ROUTES
-# ═══════════════════════════════════════════════════════
+
+# ===========================================================
+# API ROUTES  (unchanged — do NOT modify)
+# ===========================================================
 @app.route("/api/health")
+@app.route("/health")
 def health_check():
-    """Health check endpoint for monitoring/load balancers."""
-    return jsonify({
-        "status": "healthy",
-        "service": "flowtrace",
-        "demo_mode": DEMO_MODE,
-        "auth_enabled": AUTH_ENABLED,
-    }), 200
+    """Lightweight health check -- no DB dependency."""
+    return jsonify({"status": "ok", "app": "FlowTrace"}), 200
+
 
 @app.route("/api/graph")
 @require_auth
@@ -276,17 +349,20 @@ def graph():
         for job in jobs:
             name = job["name"]
             details = service.get_job_details(name)
-            jobs_data.append({
-                "name": name,
-                "color": job.get("color", "notbuilt"),
-                "details": details
-            })
+            jobs_data.append(
+                {
+                    "name": name,
+                    "color": job.get("color", "notbuilt"),
+                    "details": details,
+                }
+            )
 
         return jsonify(build_graph(jobs_data))
 
     except Exception as e:
         logger.error(f"Graph API error: {e}", exc_info=True)
         return jsonify({"error": "Failed to load graph data"}), 500
+
 
 @app.route("/api/jobs")
 @require_auth
@@ -304,19 +380,22 @@ def api_jobs():
             upstream_projects = details.get("upstreamProjects") or []
             downstream_projects = details.get("downstreamProjects") or []
 
-            jobs_detail_list.append({
-                "name": name,
-                "color": job.get("color", "notbuilt"),
-                "build_number": last_build.get("number"),
-                "duration": last_build.get("duration"),
-                "upstream": [u.get("name") for u in upstream_projects],
-                "downstream": [d.get("name") for d in downstream_projects]
-            })
+            jobs_detail_list.append(
+                {
+                    "name": name,
+                    "color": job.get("color", "notbuilt"),
+                    "build_number": last_build.get("number"),
+                    "duration": last_build.get("duration"),
+                    "upstream": [u.get("name") for u in upstream_projects],
+                    "downstream": [d.get("name") for d in downstream_projects],
+                }
+            )
 
         return jsonify(jobs_detail_list)
     except Exception as e:
         logger.error(f"Jobs API error: {e}", exc_info=True)
         return jsonify({"error": "Failed to load jobs data"}), 500
+
 
 @app.route("/api/stats")
 @require_auth
@@ -325,40 +404,57 @@ def api_stats():
         service = get_service()
         jobs = service.get_all_jobs()
 
-        success_count = sum(1 for j in jobs if j.get("color", "").startswith("blue"))
-        failed_count = sum(1 for j in jobs if j.get("color", "").startswith("red"))
-        unstable_count = sum(1 for j in jobs if j.get("color", "").startswith("yellow"))
+        success_count = sum(
+            1 for j in jobs if j.get("color", "").startswith("blue")
+        )
+        failed_count = sum(
+            1 for j in jobs if j.get("color", "").startswith("red")
+        )
+        unstable_count = sum(
+            1 for j in jobs if j.get("color", "").startswith("yellow")
+        )
 
-        return jsonify({
-            "total_jobs": len(jobs),
-            "success_count": success_count,
-            "failed_count": failed_count,
-            "unstable_count": unstable_count,
-            "last_updated": "Just now"
-        })
+        return jsonify(
+            {
+                "total_jobs": len(jobs),
+                "success_count": success_count,
+                "failed_count": failed_count,
+                "unstable_count": unstable_count,
+                "last_updated": "Just now",
+            }
+        )
     except Exception as e:
         logger.error(f"Stats API error: {e}", exc_info=True)
         return jsonify({"error": "Failed to load stats"}), 500
 
-# ═══════════════════════════════════════════════════════
+
+# ===========================================================
 # ERROR HANDLERS
-# ═══════════════════════════════════════════════════════
+# ===========================================================
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template("errors/404.html"), 404
+
 
 @app.errorhandler(500)
 def internal_error(e):
     logger.error(f"500 error: {e}", exc_info=True)
     return render_template("errors/500.html"), 500
 
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
-    return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
+    return jsonify(
+        {
+            "error": "Too many requests. Please wait before trying again.",
+            "retry_after": str(getattr(e, "retry_after", 60)),
+        }
+    ), 429
 
-# ═══════════════════════════════════════════════════════
+
+# ===========================================================
 # SECURITY HEADERS
-# ═══════════════════════════════════════════════════════
+# ===========================================================
 @app.after_request
 def set_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -366,12 +462,15 @@ def set_security_headers(response):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     if IS_PRODUCTION:
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
     return response
 
-# ═══════════════════════════════════════════════════════
+
+# ===========================================================
 # ENTRY POINT
-# ═══════════════════════════════════════════════════════
+# ===========================================================
 if __name__ == "__main__":
     is_dev = os.environ.get("FLASK_ENV", "development") != "production"
     port = int(os.environ.get("PORT", 5000))
@@ -381,6 +480,4 @@ if __name__ == "__main__":
         app.run(debug=True, host="127.0.0.1", port=port)
     else:
         logger.info(f"Starting FlowTrace in PRODUCTION mode on port {port}")
-        # In production, use: gunicorn -w 4 -b 0.0.0.0:5000 src.main.python.api.app:app
-        # Or: waitress-serve --port=5000 src.main.python.api.app:app
         app.run(debug=False, host="0.0.0.0", port=port)

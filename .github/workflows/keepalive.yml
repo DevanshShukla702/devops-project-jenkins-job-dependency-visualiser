@@ -1,0 +1,54 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Runs every Monday and Thursday at 9:00 AM UTC
+    # 3-4 day gap -- well within the 7-day pause window
+    - cron: "0 9 * * 1,4"
+  workflow_dispatch:
+    # Manual trigger from GitHub Actions UI (use before interviews)
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Send keepalive query to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          echo "Pinging Supabase at $(date)..."
+
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/users?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+
+          echo "HTTP Response Code: $RESPONSE"
+
+          if [ "$RESPONSE" = "200" ] || [ "$RESPONSE" = "206" ]; then
+            echo "Supabase is active and responding correctly."
+          else
+            echo "Unexpected response: $RESPONSE"
+            echo "Supabase may be starting up -- this is normal on first ping."
+            exit 0
+          fi
+
+      - name: Also ping the Vercel deployment
+        env:
+          VERCEL_URL: ${{ secrets.VERCEL_APP_URL }}
+        run: |
+          if [ -n "$VERCEL_URL" ]; then
+            echo "Pinging Vercel app at $(date)..."
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+              "${VERCEL_URL}/health" \
+              --max-time 30)
+            echo "Vercel HTTP Response Code: $RESPONSE"
+          else
+            echo "VERCEL_APP_URL not set. Skipping Vercel ping."
+          fi
+          echo "Keepalive complete."

@@ -8,6 +8,8 @@ __pycache__/
 
 # Virtual environment
 .env
+.env.local
+.env.production
 .venv/
 venv/
 env/
@@ -27,8 +29,9 @@ build/
 logs/
 src/main/python/logs/
 
-# Database
+# Database (local SQLite)
 *.db
+*.sqlite
 *.sqlite3
 
 # Docker overrides
@@ -37,6 +40,9 @@ docker-compose.override.yml
 # OS files
 .DS_Store
 Thumbs.db
+
+# Vercel
+.vercel
 
 # Gemini
 .gemini/

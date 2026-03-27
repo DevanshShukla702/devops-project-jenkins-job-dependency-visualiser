@@ -1,0 +1,17 @@
+# FlowTrace Configuration Example
+# Copy this to config.yaml and fill in your values.
+# Credentials should be set via environment variables (see .env.example).
+
+app:
+  title: "FlowTrace"
+  demo_mode: true
+  auto_refresh_interval: 30
+
+auth:
+  enabled: true
+  secret_key: "REPLACE_WITH_ENV_VAR"
+
+jenkins:
+  url: "http://your-jenkins-server:8080"
+  username: "REPLACE_WITH_ENV_VAR"
+  api_token: "REPLACE_WITH_ENV_VAR"
