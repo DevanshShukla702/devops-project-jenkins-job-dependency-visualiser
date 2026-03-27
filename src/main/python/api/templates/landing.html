@@ -18,6 +18,7 @@
         <div class="hero-cta">
             <a href="/login" class="btn btn-primary btn-lg">Get Started →</a>
             <form action="{{ url_for('login') }}" method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="demo_bypass" value="true">
                 <button type="submit" class="btn btn-outline btn-lg">View Demo</button>
             </form>

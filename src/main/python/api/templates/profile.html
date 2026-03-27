@@ -25,6 +25,7 @@
             </div>
             
             <form action="{{ url_for('profile_page') }}" method="POST" id="profile-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label>Username <span style="font-size:10px; color:var(--text-muted)">(Identity Immutable)</span></label>
                     <input type="text" class="form-control mono" value="{{ user.username }}" disabled style="opacity: 0.8; cursor: not-allowed; font-size:13px; color: var(--text-secondary)">

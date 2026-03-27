@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}404 — Page Not Found | FlowTrace{% endblock %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - var(--navbar-height)); text-align: center; padding: 2rem;">
+    <div style="font-size: 8rem; font-family: var(--font-display); color: var(--accent-cyan); line-height: 1; margin-bottom: 1rem; opacity: 0.8;">404</div>
+    <h1 style="font-size: 2rem; margin-bottom: 0.75rem; color: var(--text-primary);">Page Not Found</h1>
+    <p style="color: var(--text-secondary); max-width: 400px; margin-bottom: 2rem; line-height: 1.6;">
+        The pipeline path you're looking for doesn't exist or has been moved.
+    </p>
+    <div style="display: flex; gap: 1rem;">
+        <a href="/" class="btn btn-primary">Back to Home</a>
+        <a href="/dashboard" class="btn btn-outline">Go to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

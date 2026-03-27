@@ -3,11 +3,20 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
+*.egg
+
+# Virtual environment
 .env
+.venv/
+venv/
+env/
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # Build artifacts
 dist/
@@ -16,6 +25,18 @@ build/
 # Logs
 *.log
 logs/
+src/main/python/logs/
+
+# Database
+*.db
+*.sqlite3
 
 # Docker overrides
 docker-compose.override.yml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Gemini
+.gemini/

@@ -1,3 +1,10 @@
+# FlowTrace Configuration
+# -----------------------------------------------
+# SECURITY NOTE: All sensitive values (secret_key, jenkins
+# credentials) are loaded from ENVIRONMENT VARIABLES.
+# See .env.example for the required variables.
+# -----------------------------------------------
+
 app:
   title: "FlowTrace"
   demo_mode: false
@@ -5,9 +12,11 @@ app:
 
 auth:
   enabled: true
-  secret_key: "flowtrace-super-secret-key-change-me"
+  # secret_key is loaded from env: FLOWTRACE_SECRET_KEY
 
 jenkins:
+  # All Jenkins config loaded from environment variables:
+  #   JENKINS_URL, JENKINS_USERNAME, JENKINS_TOKEN
   url: "http://localhost:8080"
-  username: "23FE10CSE00741"
-  token: "115f024c9de06f298dadd3a70a691716ab"
+  username: ""
+  token: ""
