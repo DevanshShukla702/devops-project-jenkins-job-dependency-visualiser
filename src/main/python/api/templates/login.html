@@ -44,6 +44,7 @@
                 </button>
             </form>
             
+            {% if demo_mode %}
             <form action="{{ url_for('login') }}" method="POST" id="demo-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="demo_bypass" value="true">
@@ -51,6 +52,7 @@
                     [ Demo Mode: Bypass Auth ]
                 </button>
             </form>
+            {% endif %}
             
             <div class="auth-footer">
                 <p>New user? <a href="{{ url_for('register') }}">Create an account</a></p>

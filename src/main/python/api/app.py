@@ -187,7 +187,7 @@ def require_auth(f):
 # ===========================================================
 @app.route("/")
 def index():
-    return render_template("landing.html")
+    return render_template("landing.html", demo_mode=DEMO_MODE)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -202,17 +202,25 @@ def login():
         demo_bypass = request.form.get("demo_bypass")
 
         if demo_bypass == "true":
+            # Demo bypass ONLY works when DEMO_MODE is enabled
+            if not DEMO_MODE:
+                logger.warning(
+                    f"Demo bypass attempt blocked (DEMO_MODE=false) from {request.remote_addr}"
+                )
+                flash("Demo mode is disabled. Please log in with your credentials.", "error")
+                return render_template("login.html", demo_mode=DEMO_MODE)
+
             demo_user = User.find_by_username("demo")
             if not demo_user:
                 User.create("Demo User", "demo@flowtrace.local", "demo", "demo")
                 demo_user = User.find_by_username("demo")
             login_user(demo_user)
-            logger.info("Demo user login")
+            logger.info("Demo user login (demo mode)")
             return redirect(url_for("dashboard"))
 
         if not username or not password:
             flash("Please enter both username and password", "error")
-            return render_template("login.html")
+            return render_template("login.html", demo_mode=DEMO_MODE)
 
         user = User.find_by_username(username)
         if user and user.check_password(password):
@@ -225,7 +233,7 @@ def login():
         )
         flash("Invalid username or password", "error")
 
-    return render_template("login.html")
+    return render_template("login.html", demo_mode=DEMO_MODE)
 
 
 @app.route("/register", methods=["GET", "POST"])
