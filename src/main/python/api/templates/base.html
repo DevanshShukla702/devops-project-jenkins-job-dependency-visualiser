@@ -193,6 +193,10 @@
             const html = document.documentElement;
             html.setAttribute('data-theme', isLight ? 'light' : 'dark');
             
+            // Toggle body class for pseudo-element selectors
+            document.body.classList.toggle('theme-light', isLight);
+            document.body.classList.toggle('theme-dark', !isLight);
+            
             // If on dashboard, update graph nodes canvas colors dynamically
             if (window.network && window.network.body && window.network.body.data.nodes && typeof getGraphOptions === 'function') {
                 window.network.setOptions(getGraphOptions());

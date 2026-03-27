@@ -9,8 +9,8 @@ function getNodeColor(status) {
       'success':   { border: get('--node-border-success'), shadow: get('--node-shadow-success') },
       'failed':    { border: get('--node-border-failed'), shadow: get('--node-shadow-failed') },
       'unstable':  { border: get('--node-border-unstable'), shadow: get('--node-shadow-unstable') },
-      'not_built': { border: get('--node-border-notbuilt'), shadow: 'rgba(100,116,139,0.15)' },
-      'notbuilt':  { border: get('--node-border-notbuilt'), shadow: 'rgba(100,116,139,0.15)' }
+      'not_built': { border: get('--node-border-notbuilt'), shadow: get('--node-shadow-notbuilt') },
+      'notbuilt':  { border: get('--node-border-notbuilt'), shadow: get('--node-shadow-notbuilt') }
     };
     return map[status?.toLowerCase()] || map['notbuilt'];
 }
@@ -22,8 +22,8 @@ function getGraphOptions() {
     return {
       nodes: {
         shape: 'box',
-        borderWidth: 1.5,
-        borderWidthSelected: 2.5,
+        borderWidth: 2,
+        borderWidthSelected: 3,
         font: {
           face: 'JetBrains Mono, monospace',
           size: 12,
@@ -44,10 +44,10 @@ function getGraphOptions() {
         shadow: {
           enabled: true,
           color: get('--node-shadow-success'),
-          size: 10,
-          x: 0, y: 0
+          size: 14,
+          x: 0, y: 2
         },
-        margin: { top: 8, bottom: 8, left: 12, right: 12 }
+        margin: { top: 8, bottom: 8, left: 14, right: 14 }
       },
       edges: {
         color: {
@@ -55,8 +55,8 @@ function getGraphOptions() {
           highlight: get('--edge-hover'),
           hover: get('--edge-hover')
         },
-        width: 1.2,
-        arrows: { to: { enabled: true, scaleFactor: 0.65 } },
+        width: 1.5,
+        arrows: { to: { enabled: true, scaleFactor: 0.7 } },
         smooth: {
           type: 'cubicBezier',
           forceDirection: 'vertical',
@@ -68,8 +68,8 @@ function getGraphOptions() {
         hierarchical: {
           direction: 'UD',
           sortMethod: 'directed',
-          levelSeparation: 100,
-          nodeSpacing: 140
+          levelSeparation: 110,
+          nodeSpacing: 150
         }
       },
       interaction: {

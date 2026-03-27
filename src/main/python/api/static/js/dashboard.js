@@ -91,7 +91,7 @@ function renderSidebarJobs(filter = 'all', searchQuery = '') {
         div.innerHTML = `
             <div class="job-dot ${status}"></div>
             <div class="job-name">${job.name}</div>
-            <div class="job-build">${job.lastBuild ? '#' + job.lastBuild.number : '-'}</div>
+            <div class="job-build">${job.build_number ? '#' + job.build_number : '-'}</div>
         `;
         list.appendChild(div);
     });

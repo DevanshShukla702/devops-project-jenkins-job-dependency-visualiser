@@ -172,13 +172,17 @@ def api_jobs():
             name = job["name"]
             details = service.get_job_details(name)
             last_build = details.get("lastBuild", {}) or {}
+            
+            upstream_projects = details.get("upstreamProjects") or []
+            downstream_projects = details.get("downstreamProjects") or []
+            
             jobs_detail_list.append({
                 "name": name,
                 "color": job.get("color", "notbuilt"),
                 "build_number": last_build.get("number"),
                 "duration": last_build.get("duration"),
-                "upstream": [u.get("name") for u in details.get("upstreamProjects", [])],
-                "downstream": [d.get("name") for d in details.get("downstreamProjects", [])]
+                "upstream": [u.get("name") for u in upstream_projects],
+                "downstream": [d.get("name") for d in downstream_projects]
             })
             
         return jsonify(jobs_detail_list)
