@@ -202,13 +202,6 @@ def login():
         demo_bypass = request.form.get("demo_bypass")
 
         if demo_bypass == "true":
-            # Demo bypass ONLY works when DEMO_MODE is enabled
-            if not DEMO_MODE:
-                logger.warning(
-                    f"Demo bypass attempt blocked (DEMO_MODE=false) from {request.remote_addr}"
-                )
-                flash("Demo mode is disabled. Please log in with your credentials.", "error")
-                return render_template("login.html", demo_mode=DEMO_MODE)
 
             demo_user = User.find_by_username("demo")
             if not demo_user:

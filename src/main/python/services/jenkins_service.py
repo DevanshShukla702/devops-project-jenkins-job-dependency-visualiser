@@ -20,8 +20,9 @@ TOKEN = os.environ.get("JENKINS_TOKEN", config.get("jenkins", {}).get("token", "
 
 if not USERNAME or not TOKEN:
     logger.warning("Jenkins credentials not configured. Set JENKINS_USERNAME and JENKINS_TOKEN env vars.")
-
-auth = HTTPBasicAuth(USERNAME, TOKEN)
+    auth = None
+else:
+    auth = HTTPBasicAuth(USERNAME, TOKEN)
 
 # Connection timeout settings
 CONNECT_TIMEOUT = 5
