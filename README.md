@@ -1,107 +1,51 @@
-# FlowTrace: Operational Intelligence & Dependency Visualizer
+# FlowTrace
+> Real-Time Operational Intelligence & Pipeline Dependency Visualizer
 
----
+## Overview
+FlowTrace is a production-grade DevOps visualization platform engineered to bridge the gap between raw functional automation and operational intelligence. It transforms standard Jenkins pipelines from text logs into fully interactive, auto-updating dependency graphs, allowing engineering teams to instantly trace upstreams, downstreams, and build failures.
 
-## 📌 Platform Overview
+## Key Features
+* **Real-Time DAG Visualization:** Translates complex CI/CD relationships into directed acyclic graphs (DAG) that highlight execution traces.
+* **Intelligent Telemetry Dashboard:** Parses job counts, success rates, and live active states natively from REST API payloads.
+* **Dual-Mode Engine:** Includes a robust mock-state engine designed for disconnected testing and portfolio demonstrations without needing a live Jenkins instance.
+* **Secure Access Control:** Session-backed authentication using Flask-Login and Werkzeug security.
 
-**FlowTrace** is a professional, production-grade DevOps visualization platform engineered to bridge the gap between raw functional automation and clear operational intelligence. It transforms standard Jenkins pipelines from text logs into fully interactive, auto-updating dependency graphs. 
+## Tech Stack
+* **Backend:** Python 3.11, Flask, SQLAlchemy, Flask-Limiter
+* **Database:** SQLite (Local) / Supabase PostgreSQL (Production)
+* **Frontend:** HTML5, CSS3, Vanilla JS, `vis-network` (Graphing), GSAP (Animations)
+* **Integrations:** Jenkins REST API 
 
-Designed for large-scale CI/CD environments, FlowTrace eliminates the complexity of tracing upstreams, downstreams, and build failures by providing a unified, real-time visual interface.
+## Architecture & Data Flow
+FlowTrace utilizes a modular monolithic architecture. The frontend consumes REST endpoints exposed by the Flask API. The backend features an abstraction layer (`JenkinsClient`) that uses TCP connection pooling to efficiently fetch and parse thousands of Jenkins jobs. A mathematical transformation layer (`graph_builder.py`) resolves these dependencies into nodes and edges before serving them to the client.
 
-<div align="center">
-  <img src="https://via.placeholder.com/800x400.png?text=FlowTrace+Dashboard+-+Real-time+Jenkins+Visualization" alt="FlowTrace Dashboard">
-</div>
+## Engineering Decisions
+* **TCP Connection Pooling:** Utilizing `requests.Session()` in the Jenkins client minimizes latency and prevents port exhaustion during heavy API polling.
+* **Service Abstraction Layer:** The backend dynamically injects either a live Jenkins client or a Mock Service based on environment variables, enabling seamless local development.
+* **O(N+E) Graph Parsing:** The graph builder parses upstreams and downstreams in a single pass to ensure O(N+E) time complexity, critical for scaling to large Jenkins clusters.
 
----
+## Challenges & Solutions
+**Challenge:** Managing high-latency cold starts with the Supabase PostgreSQL database caused intermittent 500 errors on the initial dashboard load.
+**Solution:** Engineered a custom `_query_with_retry` wrapper in the SQLAlchemy data models that catches `OperationalError` exceptions, initiates a graceful backoff, and automatically retries the query, ensuring a stable user experience.
 
-## 🚀 Key Platform Features
-
-* **Real-Time Node Graphing:** Translates complex CI/CD relationships into smooth, top-down vis-network maps that instantly highlight execution traces.
-* **Intelligent Metrics Dashboard:** Job counts, success rates, and live active states parsed natively from REST API payloads.
-* **Deep Dependency Tracing:** Clear, interactive visual routing of multi-tiered upstream/downstream jobs.
-* **Modern Premium UI/UX:** Complete dark-mode interface, glassmorphism panels, GSAP page transitions, and toast event notifications.
-* **Robust Data Mocking Engine:** Includes a robust offline simulated-pipeline state engine designed for disconnected testing and portfolio demonstration.
-* **Secure Authorization:** Protects infrastructure data utilizing session-backed Flask-Login configurations.
-
----
-
-## 🛠️ Technology Stack
-
-**Backend & Data Services:**
-* Python 3.11, Flask
-* SQLite, Flask-Login, Werkzeug
-* Jenkins REST API & Custom Polling Service
-
-**Frontend & Visuals:**
-* HTML5, CSS3, Vanilla JS
-* Data Visualization: `vis-network`
-* CSS Interactions: `tsParticles`, `GSAP` animations
-
----
-
-## 📂 Architecture & Project Structure
-
-The repository follows a clean, enterprise-ready structure separating infrastructure configuration from the web API source code:
-
-```text
-├── deliverables/           # Compiled builds and release notes
-├── docs/                   # Architectural documentation & API references
-├── infrastructure/         # IaC, deployment scripts, and provisioning assets
-├── monitoring/             # System health configurations (Grafana/Prometheus logic)
-├── pipelines/              # Core Jenkinsfile definitions and shared libraries
-├── presentations/          # Technical slide decks and product overviews
-├── requirements.txt        # Python dependency manifest
-├── tests/                  # Unit tests and automated integration checks
-└── src/
-    └── main/
-        └── python/
-            ├── api/                  # Main Flask App & Routing
-            │   ├── static/           # Global design system (CSS/JS)
-            │   └── templates/        # Dashboard, Landing, and Auth layouts
-            ├── config/               # Settings (API credentials, Mock State Data)
-            ├── models/               # SQLite-backed ORM definitions
-            ├── services/             # Jenkins API ingestion & caching layers
-            └── visualization/        # Top-down graph mathematical build logic
-```
-
----
-
-## ▶️ Setup Guide & Local Deployment
-
-### 1. Requirements & Bootstrapping
-Activate a clean virtual environment and install the required dependencies:
+## Setup Instructions
 ```bash
+# 1. Clone & create virtual environment
 python -m venv .venv
-
-# Activate the environment
 # Windows: .venv\Scripts\activate
 # Linux/Mac: source .venv/bin/activate
 
+# 2. Install dependencies
 pip install -r requirements.txt
+
+# 3. Configure Environment (Optional: set FLOWTRACE_DEMO_MODE=true)
+cp .env.example .env
+
+# 4. Start Server
+set PYTHONPATH=src
+python src/api/app.py
 ```
 
-### 2. Configuration Settings
-Define your connection target in `src/main/python/config/config.yaml`.
-* To pull real telemetry, supply your Jenkins URI and token. 
-* To test the UI logic offline (mock analytics), enable `demo_mode: true`.
-
-### 3. Start the Data Integration Server
-Initialize the Python visualization microservice:
-```bash
-python src/main/python/api/app.py
-```
-
-### 4. Connect to Interface
-Visit the live local instance at:
-**[http://localhost:5000](http://localhost:5000)**
-
-*Log in through the Demo Bypass on the Welcome screen, or register an administrative root account to interact with the dashboard.*
-
----
-
-## ✅ Continuous Evolution Roadmap
-
-FlowTrace is designed with future extensions in mind:
-- **v1.1 Metrics Hub:** Introducing advanced historical charting (`Chart.js`) and build-time deviation analysis.
-- **v1.2 Real-time Webhooks:** Upgrading the Jenkins polling layer to pure WebSocket pushes for sub-second GUI latency.
-- **v2.0 Multi-Server Aggregation:** Creating unified pipeline views synced across entirely separate Jenkins clusters.
+## Future Improvements
+- **WebSocket Integration:** Transition from REST polling to pure WebSocket pushes for sub-second GUI latency.
+- **Multi-Cluster Aggregation:** Create unified pipeline views synced across entirely separate Jenkins clusters.
