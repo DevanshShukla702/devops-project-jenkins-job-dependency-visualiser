@@ -24,7 +24,7 @@
                 {% endwith %}
             </div>
             
-            <form action="{{ url_for('profile_page') }}" method="POST" id="profile-form">
+            <form action="{{ url_for('pages.profile_page') }}" method="POST" id="profile-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label>Username <span style="font-size:10px; color:var(--text-muted)">(Identity Immutable)</span></label>
@@ -52,7 +52,7 @@
             </form>
             
             <div class="auth-footer" style="margin-top: var(--space-xl);">
-                <p><a href="{{ url_for('dashboard') }}">← Back to Dashboard</a></p>
+                <p><a href="{{ url_for('pages.dashboard') }}">← Back to Dashboard</a></p>
             </div>
         </div>
     </div>

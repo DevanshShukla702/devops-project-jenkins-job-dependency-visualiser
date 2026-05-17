@@ -27,7 +27,7 @@
                 {% endwith %}
             </div>
             
-            <form action="{{ url_for('register') }}" method="POST">
+            <form action="{{ url_for('auth.register') }}" method="POST">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="name">Full Name</label>
@@ -58,7 +58,7 @@
             </form>
             
             <div class="auth-footer">
-                <p>Already have an account? <a href="{{ url_for('login') }}">Log in here</a></p>
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}">Log in here</a></p>
             </div>
         </div>
     </div>

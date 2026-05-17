@@ -27,7 +27,7 @@
                 {% endwith %}
             </div>
             
-            <form action="{{ url_for('login') }}" method="POST" id="login-form">
+            <form action="{{ url_for('auth.login') }}" method="POST" id="login-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="form-group">
                     <label for="username">Username</label>
@@ -45,7 +45,7 @@
             </form>
             
 
-            <form action="{{ url_for('login') }}" method="POST" id="demo-form">
+            <form action="{{ url_for('auth.login') }}" method="POST" id="demo-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="demo_bypass" value="true">
                 <button type="submit" class="demo-bypass-btn">
@@ -55,7 +55,7 @@
 
             
             <div class="auth-footer">
-                <p>New user? <a href="{{ url_for('register') }}">Create an account</a></p>
+                <p>New user? <a href="{{ url_for('auth.register') }}">Create an account</a></p>
             </div>
         </div>
     </div>
